@@ -1,0 +1,27 @@
+{
+  "name": "taskflow-pm",
+  "version": "1.0.0",
+  "description": "A powerful to-do list with project management features",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": ["todo", "project-management", "tasks"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.taskflow.pm",
+    "productName": "TaskFlow PM",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

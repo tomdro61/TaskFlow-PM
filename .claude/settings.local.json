@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm start)",
+      "Bash(timeout:*)",
+      "Bash(echo:*)",
+      "Bash(node:*)",
+      "Bash(where node)",
+      "WebSearch",
+      "WebFetch(domain:sunsama.com)",
+      "WebFetch(domain:super-productivity.com)",
+      "WebFetch(domain:www.sunsama.com)",
+      "Bash(claude /plugin marketplace add:*)",
+      "Bash(taskkill:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(ping:*)",
+      "Bash(dir:*)",
+      "Bash(wc:*)",
+      "Bash(explorer \"C:\\\\Users\\\\vince\\\\OneDrive\\\\Vincenzo\\\\Claude\\\\To Do Software\")",
+      "Bash(start \"\" \"C:\\\\Users\\\\vince\\\\OneDrive\\\\Vincenzo\\\\Claude\\\\To Do Software\")",
+      "Bash(powershell -Command \"Get-Process electron -ErrorAction SilentlyContinue | Stop-Process -Force\")",
+      "Bash(test:*)",
+      "Bash(npx electron .)",
+      "Bash(cat:*)",
+      "WebFetch(domain:developers.notion.com)"
+    ]
+  }
+}

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Bar</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: transparent;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .floating-bar {
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #ea580c, #c2410c);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 4px 24px rgba(234, 88, 12, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .resize-handle {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 16px;
+      height: 16px;
+      cursor: se-resize;
+      -webkit-app-region: no-drag;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.3);
+      font-size: 10px;
+    }
+
+    .resize-handle:hover {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .bar-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: move;
+      -webkit-app-region: drag;
+    }
+
+    .bar-task {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.95);
+      max-width: 280px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .bar-task.empty {
+      font-style: italic;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .bar-expand {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 10px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      -webkit-app-region: no-drag;
+    }
+
+    .bar-expand.visible {
+      display: flex;
+    }
+
+    .bar-expand:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .bar-expand.expanded {
+      transform: rotate(180deg);
+    }
+
+    .bar-actions {
+      display: flex;
+      gap: 6px;
+      -webkit-app-region: no-drag;
+    }
+
+    .bar-btn {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .bar-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: white;
+    }
+
+    .bar-btn.copy:hover {
+      background: rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+    }
+
+    .bar-btn.copy.copied {
+      background: rgba(34, 197, 94, 0.4);
+      color: #86efac;
+    }
+
+    .bar-btn.complete:hover {
+      background: rgba(34, 197, 94, 0.4);
+      color: #86efac;
+    }
+
+    .bar-btn.close:hover {
+      background: rgba(0, 0, 0, 0.2);
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .bar-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Subtasks Section */
+    .bar-subtasks {
+      display: none;
+      padding: 8px 14px 10px;
+      background: rgba(0, 0, 0, 0.15);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .bar-subtasks.visible {
+      display: block;
+    }
+
+    .bar-subtask {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 0;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .bar-subtask.done {
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: line-through;
+    }
+
+    .subtask-check {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      -webkit-app-region: no-drag;
+    }
+
+    .subtask-check:hover {
+      border-color: rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .bar-subtask.done .subtask-check {
+      background: rgba(34, 197, 94, 0.5);
+      border-color: rgba(34, 197, 94, 0.7);
+      color: white;
+    }
+
+    .subtask-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .bar-no-subtasks {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.4);
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-bar" id="floating-bar">
+    <div class="bar-main">
+      <span class="bar-task empty" id="bar-task">No task selected</span>
+      <button class="bar-expand" id="expand-btn" title="Show subtasks">▼</button>
+      <div class="bar-divider"></div>
+      <div class="bar-actions">
+        <button class="bar-btn copy" id="copy-btn" title="Copy for Claude">📋</button>
+        <button class="bar-btn complete" id="complete-btn" title="Complete">✓</button>
+        <button class="bar-btn close" id="close-btn" title="Close bar">×</button>
+      </div>
+    </div>
+    <div class="bar-subtasks" id="bar-subtasks"></div>
+    <div class="resize-handle" id="resize-handle">⋱</div>
+  </div>
+
+  <script>
+    const taskEl = document.getElementById('bar-task');
+    const completeBtn = document.getElementById('complete-btn');
+    const closeBtn = document.getElementById('close-btn');
+    const expandBtn = document.getElementById('expand-btn');
+    const copyBtn = document.getElementById('copy-btn');
+    const subtasksEl = document.getElementById('bar-subtasks');
+
+    let currentTask = null;
+    let currentTaskId = null;
+    let currentSubtasks = [];
+    let expanded = false;
+
+    // Listen for task updates from main process
+    window.floatingBarApi.onTaskUpdate((task) => {
+      currentTask = task;
+      if (task) {
+        currentTaskId = task.id;
+        currentSubtasks = task.subtasks || [];
+        taskEl.textContent = task.name;
+        taskEl.classList.remove('empty');
+
+        // Show expand button if has subtasks
+        if (currentSubtasks.length > 0) {
+          expandBtn.classList.add('visible');
+          renderSubtasks();
+        } else {
+          expandBtn.classList.remove('visible');
+          subtasksEl.classList.remove('visible');
+          expanded = false;
+          expandBtn.classList.remove('expanded');
+        }
+      } else {
+        currentTaskId = null;
+        currentSubtasks = [];
+        taskEl.textContent = 'No task selected';
+        taskEl.classList.add('empty');
+        expandBtn.classList.remove('visible');
+        subtasksEl.classList.remove('visible');
+        expanded = false;
+        expandBtn.classList.remove('expanded');
+      }
+
+      // Resize window
+      window.floatingBarApi.resize();
+    });
+
+    function renderSubtasks() {
+      if (currentSubtasks.length === 0) {
+        subtasksEl.innerHTML = '<div class="bar-no-subtasks">No subtasks</div>';
+        return;
+      }
+
+      // Sort subtasks: pending first, completed at the bottom
+      const sortedSubtasks = [...currentSubtasks].sort((a, b) => {
+        if (a.status === 'done' && b.status !== 'done') return 1;
+        if (a.status !== 'done' && b.status === 'done') return -1;
+        return 0;
+      });
+
+      subtasksEl.innerHTML = sortedSubtasks.map(st => `
+        <div class="bar-subtask ${st.status === 'done' ? 'done' : ''}" data-id="${st.id}">
+          <div class="subtask-check">${st.status === 'done' ? '✓' : ''}</div>
+          <span class="subtask-name">${escapeHtml(st.name)}</span>
+        </div>
+      `).join('');
+
+      // Bind subtask clicks
+      subtasksEl.querySelectorAll('.subtask-check').forEach(check => {
+        check.addEventListener('click', () => {
+          const subtaskId = check.closest('.bar-subtask').dataset.id;
+          window.floatingBarApi.toggleSubtask(currentTaskId, subtaskId);
+        });
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Expand/collapse subtasks
+    expandBtn.addEventListener('click', () => {
+      expanded = !expanded;
+      subtasksEl.classList.toggle('visible', expanded);
+      expandBtn.classList.toggle('expanded', expanded);
+      window.floatingBarApi.resize();
+    });
+
+    // Click task name to show main window
+    taskEl.addEventListener('click', () => {
+      window.floatingBarApi.showMain();
+    });
+    taskEl.style.cursor = 'pointer';
+    taskEl.style.webkitAppRegion = 'no-drag';
+
+    // Copy button - copy task for Claude
+    copyBtn.addEventListener('click', () => {
+      if (currentTask) {
+        let text = `# ${currentTask.name}\n\n`;
+
+        if (currentTask.description) {
+          text += `## Description\n${currentTask.description}\n\n`;
+        }
+
+        if (currentTask.context) {
+          text += `## Context\n${currentTask.context}\n\n`;
+        }
+
+        if (currentTask.subtasks && currentTask.subtasks.length > 0) {
+          text += `## Subtasks\n`;
+          currentTask.subtasks.forEach(st => {
+            text += `- [${st.status === 'done' ? 'x' : ' '}] ${st.name}\n`;
+          });
+          text += '\n';
+        }
+
+        if (currentTask.workNotes) {
+          text += `## Notes\n${currentTask.workNotes}\n\n`;
+        }
+
+        window.floatingBarApi.copyToClipboard(text);
+
+        // Visual feedback
+        copyBtn.classList.add('copied');
+        copyBtn.textContent = '✓';
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+          copyBtn.textContent = '📋';
+        }, 1500);
+      }
+    });
+
+    // Complete button
+    completeBtn.addEventListener('click', () => {
+      if (currentTaskId) {
+        window.floatingBarApi.completeTask(currentTaskId);
+      }
+    });
+
+    // Close button
+    closeBtn.addEventListener('click', () => {
+      window.floatingBarApi.close();
+    });
+  </script>
+</body>
+</html>

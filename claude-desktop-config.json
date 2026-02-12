@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "taskflow": {
+      "command": "node",
+      "args": ["C:\\Users\\vince\\OneDrive\\Vincenzo\\Claude\\To Do Software\\mcp-server\\index.js"]
+    }
+  }
+}
