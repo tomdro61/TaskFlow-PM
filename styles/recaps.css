@@ -1,0 +1,872 @@
+/* ==========================================
+   RECAPS VIEW
+   ========================================== */
+
+.recaps-view {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.recaps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.recaps-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recaps-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.recaps-empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.recaps-empty p {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.recaps-empty .empty-hint {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Completed Items List */
+.completed-list-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.completed-date-header {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+  margin-bottom: 4px;
+}
+
+.completed-date-count {
+  font-weight: 400;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+
+.completed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.completed-item:hover {
+  background: var(--bg-hover);
+}
+
+.completed-item-check {
+  color: var(--success);
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.completed-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.completed-item-name {
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+
+.completed-item-project {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-left: 8px;
+}
+
+.completed-item-summary {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  flex-shrink: 0;
+  max-width: 200px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.recaps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.recap-card {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.recap-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.recap-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.recap-date {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recap-rating {
+  display: flex;
+  gap: 2px;
+}
+
+.recap-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.recap-stat {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.recap-learnings {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ==========================================
+   RECAP JOURNAL SECTION
+   ========================================== */
+
+.cc-recaps-section {
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.cc-recaps-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: var(--bg-paper);
+  padding: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.cc-recap-tab {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cc-recap-tab:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.cc-recap-tab.active {
+  background: var(--bg-white);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.cc-recaps-content {
+  min-height: 150px;
+}
+
+.cc-recaps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Recap Log Entries */
+.cc-recap-date-group {
+  margin-bottom: 16px;
+}
+
+.cc-recap-date-header {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.cc-recap-entry {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg-paper);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--border-medium);
+  transition: all 0.15s ease;
+}
+
+.cc-recap-entry:hover {
+  background: var(--bg-hover);
+}
+
+.cc-recap-entry.success {
+  border-left-color: var(--success);
+}
+
+.cc-recap-entry.accent {
+  border-left-color: var(--accent);
+}
+
+.cc-recap-entry.muted {
+  border-left-color: var(--text-muted);
+}
+
+.cc-recap-type-icon {
+  font-size: 14px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.cc-recap-entry-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-recap-entry-text {
+  font-size: 13px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.cc-recap-tags {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cc-recap-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+  padding: 0 4px;
+}
+
+.cc-recap-entry:hover .cc-recap-delete-btn {
+  opacity: 1;
+}
+
+.cc-recap-delete-btn:hover {
+  color: var(--danger);
+}
+
+/* Saved Recaps Cards */
+.cc-saved-recap-card {
+  padding: 14px 16px;
+  background: var(--bg-paper);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cc-saved-recap-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-medium);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.cc-saved-recap-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cc-saved-recap-icon {
+  font-size: 16px;
+}
+
+.cc-saved-recap-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cc-saved-recap-type {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  background: var(--bg-white);
+  border-radius: 4px;
+}
+
+.cc-saved-recap-stats {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.cc-saved-recap-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cc-saved-recap-footer {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Recap Entry Modal */
+.recap-type-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.recap-type-btn,
+.recap-period-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-white);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.recap-type-btn:hover,
+.recap-period-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.recap-type-btn.active,
+.recap-period-btn.active {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Recap Detail Modal */
+.recap-detail-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.recap-detail-content h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.recap-detail-content h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+}
+
+.recap-detail-content li {
+  margin-left: 20px;
+  margin-bottom: 4px;
+}
+
+.recap-detail-content em {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.recap-detail-content p {
+  margin-bottom: 12px;
+}
+
+/* ============================================
+   List View Styles
+   ============================================ */
+
+.cc-list-view {
+  padding: 20px;
+}
+
+.cc-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.cc-list-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.cc-list-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cc-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-white);
+  border-radius: var(--radius-md);
+  border: 2px solid #f59e0b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.3);
+}
+
+.cc-list-item:hover {
+  background: var(--bg-paper);
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+}
+
+/* Status: To Do - Amber/Orange glow */
+.cc-list-item {
+  border-color: #f59e0b;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
+}
+
+/* Status: In Progress - Blue glow */
+.cc-list-item.in-progress {
+  border-color: #3b82f6;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.cc-list-item.in-progress:hover {
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.6);
+}
+
+/* Status: Completed - Green glow */
+.cc-list-item.completed {
+  border-color: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
+  opacity: 0.85;
+}
+
+.cc-list-item.completed:hover {
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+/* Overdue - Red glow */
+.cc-list-item.overdue {
+  border-color: #ef4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+.cc-list-item.overdue:hover {
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.6);
+}
+
+.cc-list-check {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border-medium);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.cc-list-check:hover {
+  border-color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.cc-list-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-list-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.cc-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.cc-list-project {
+  color: var(--text-muted);
+}
+
+.cc-list-time {
+  color: var(--accent);
+}
+
+.cc-list-overdue {
+  color: var(--danger);
+  font-weight: 500;
+}
+
+.cc-list-edit {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.cc-list-item:hover .cc-list-edit {
+  opacity: 1;
+}
+
+.cc-list-edit:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+/* Completed state in list view */
+.cc-list-item.completed .cc-list-name {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.cc-list-check.checked {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-list-check.checked:hover {
+  background: var(--warning);
+  border-color: var(--warning);
+}
+
+/* Collapsible Subtasks in List View */
+.cc-list-subtasks {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.cc-list-subtasks-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.cc-list-subtasks-toggle:hover {
+  color: var(--text-primary);
+}
+
+.subtasks-chevron {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.cc-list-subtasks.collapsed .subtasks-chevron {
+  transform: rotate(0deg);
+}
+
+.cc-list-subtasks:not(.collapsed) .subtasks-chevron {
+  transform: rotate(90deg);
+}
+
+.subtasks-count {
+  font-weight: 500;
+}
+
+.cc-list-subtasks-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0 0 18px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cc-list-subtasks.collapsed .cc-list-subtasks-items {
+  display: none;
+}
+
+.cc-list-subtask {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--bg-paper);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cc-list-subtask:hover {
+  background: var(--bg-hover);
+}
+
+.subtask-check {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: 2px solid var(--border-medium);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: transparent;
+  transition: all 0.15s ease;
+}
+
+.cc-list-subtask.completed .subtask-check {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.subtask-name {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.cc-list-subtask.completed .subtask-name {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* Adjust list item to accommodate subtasks */
+.cc-list-item.has-subtasks {
+  flex-wrap: wrap;
+}
+
+.cc-list-item.has-subtasks .cc-list-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-list-item.has-subtasks .cc-list-subtasks {
+  width: 100%;
+  flex-basis: 100%;
+  margin-left: 34px;
+}
+
+/* Toast notifications */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--text-primary);
+  color: var(--bg-white);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow-lg);
+  z-index: 10000;
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+/* ============================================
+   RECAPS VIEW - Clean Collapsible Design
+   ============================================ */
+
+.recaps-clean .recaps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.recaps-clean .recaps-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recaps-list-clean {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recap-row {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.recap-row.expanded {
+  border-color: var(--accent);
+}
+
+.recap-row-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.recap-row-bar:hover {
+  background: var(--bg-hover);
+}
+
+.recap-row-toggle {
+  font-size: 10px;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.recap-row.expanded .recap-row-toggle {
+  color: var(--accent);
+}
+
+.recap-row-date {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.recap-row-stats {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.recap-row-rating {
+  font-size: 12px;
+  color: var(--warning);
+  letter-spacing: 1px;
+}
+
+.recap-row-details {
+  border-top: 1px solid var(--border-light);
+  padding: 16px;
+  background: var(--bg-paper);
+}
+
+.recap-row-details.hidden {
+  display: none;
+}
+
+.recap-detail-content {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.recap-detail-notes {
+  margin-bottom: 12px;
+  white-space: pre-wrap;
+}
+
+.recap-detail-tasks {
+  padding-top: 12px;
+  border-top: 1px solid var(--border-light);
+}
+
+.recap-detail-tasks strong {
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.recap-detail-tasks ul {
+  margin: 8px 0 0 20px;
+  padding: 0;
+}
+
+.recap-detail-tasks li {
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}

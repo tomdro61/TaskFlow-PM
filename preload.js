@@ -10,14 +10,17 @@ contextBridge.exposeInMainWorld('api', {
   hidePill: () => ipcRenderer.invoke('hide-pill'),
   updatePill: (data) => ipcRenderer.invoke('update-pill', data),
   onPillAction: (callback) => {
+    ipcRenderer.removeAllListeners('pill-action');
     ipcRenderer.on('pill-action', (event, action) => callback(action));
   },
   // Quick Capture APIs
   showCapture: () => ipcRenderer.invoke('show-capture'),
   onTaskCaptured: (callback) => {
+    ipcRenderer.removeAllListeners('task-captured');
     ipcRenderer.on('task-captured', (event, task) => callback(task));
   },
   onShortcutRegistered: (callback) => {
+    ipcRenderer.removeAllListeners('shortcut-registered');
     ipcRenderer.on('shortcut-registered', (event, shortcut) => callback(shortcut));
   },
   // File operations
@@ -26,16 +29,16 @@ contextBridge.exposeInMainWorld('api', {
   // Clipboard
   copyToClipboard: (text) => ipcRenderer.invoke('copy-to-clipboard', text),
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
-  // Keyboard shortcut trigger
-  triggerShortcut: () => ipcRenderer.invoke('trigger-shortcut'),
   // Floating Task Bar
   showFloatingBar: () => ipcRenderer.invoke('show-floating-bar'),
   hideFloatingBar: () => ipcRenderer.invoke('hide-floating-bar'),
   updateFloatingBar: (task) => ipcRenderer.invoke('update-floating-bar', task),
   onFloatingBarComplete: (callback) => {
+    ipcRenderer.removeAllListeners('floating-bar-complete-task');
     ipcRenderer.on('floating-bar-complete-task', (event, taskId) => callback(taskId));
   },
   onFloatingBarToggleSubtask: (callback) => {
+    ipcRenderer.removeAllListeners('floating-bar-toggle-subtask');
     ipcRenderer.on('floating-bar-toggle-subtask', (event, taskId, subtaskId) => callback(taskId, subtaskId));
   },
   // Claude Queue

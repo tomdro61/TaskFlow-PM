@@ -1,0 +1,850 @@
+/* ============================================
+   ENHANCED PROJECT VIEW
+   ============================================ */
+
+/* --- Enhanced Project Header (compact) --- */
+
+.project-header-goal {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-style: italic;
+}
+
+.project-progress-section {
+  margin-top: 8px;
+}
+
+.project-progress-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-progress-inline .project-progress-track {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-hover);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.project-progress-inline .project-progress-fill {
+  height: 100%;
+  background: var(--success);
+  border-radius: 3px;
+  transition: width var(--transition-slow);
+}
+
+.project-progress-pct {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--success);
+  min-width: 36px;
+  text-align: right;
+}
+
+.project-progress-stats {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* --- Planning Section --- */
+
+.project-planning {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Attention card -- bordered card with left accent stripe */
+.project-attention-card {
+  background: var(--bg-paper);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid #f97316;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Claude Can Help card */
+.project-claude-card {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-left: 3px solid #6366f1;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.claude-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.attention-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+}
+
+.attention-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.attention-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.attention-row.overdue .attention-label {
+  color: var(--danger);
+}
+
+.attention-row.blocked .attention-label {
+  color: #f97316;
+}
+
+.attention-row.claude-ready .attention-label {
+  color: #6366f1;
+}
+
+.attention-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.claude-queue-btn {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+  white-space: nowrap;
+}
+
+.claude-queue-btn:hover {
+  background: #4f46e5;
+}
+
+.claude-queued-label {
+  font-size: 12px;
+  color: #6366f1;
+  opacity: 0.7;
+}
+
+/* Planning pills (shared by both cards) */
+.planning-pill {
+  font-size: 12px;
+  color: var(--text-primary);
+  padding: 3px 10px;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--border-medium);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.planning-pill:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-medium);
+}
+
+.pill-exec {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.pill-exec.ai {
+  background: #eef2ff;
+  color: #6366f1;
+}
+
+.pill-exec.hybrid {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+.pill-extra {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: 6px;
+  font-style: italic;
+}
+
+/* Assign to Claude button on task cards */
+.assign-claude-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 4px;
+  opacity: 0.4;
+  transition: all var(--transition);
+}
+
+.assign-claude-btn:hover {
+  opacity: 1;
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.claude-queued-indicator {
+  font-size: 14px;
+  line-height: 1;
+  padding: 2px 4px;
+  opacity: 0.5;
+}
+
+/* Momentum section (existing HTML, now styled) */
+.project-momentum-section {
+  margin-top: 12px;
+}
+
+.momentum-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.momentum-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.momentum-stat .momentum-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.momentum-stat .momentum-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.momentum-stat.highlight .momentum-value {
+  color: var(--success);
+}
+
+.momentum-stat.blocked .momentum-value {
+  color: var(--danger);
+}
+
+/* --- Project Toolbar --- */
+
+.project-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.project-view-switcher {
+  display: flex;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.project-view-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.project-view-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-active);
+}
+
+.project-view-btn.active {
+  background: var(--bg-white);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.project-filter-select {
+  padding: 5px 10px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color var(--transition);
+}
+
+.project-filter-select:hover {
+  border-color: var(--border-medium);
+}
+
+.project-filter-select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.project-add-task-btn {
+  padding: 6px 14px;
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.project-add-task-btn:hover {
+  background: var(--accent-hover);
+}
+
+/* --- Project View Content --- */
+
+.project-view-content {
+  min-height: 200px;
+}
+
+/* --- Enhanced Task Cards (single row) --- */
+
+.enhanced-task-card {
+  display: flex;
+  align-items: stretch;
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 2px;
+  cursor: pointer;
+  transition: all var(--transition);
+  overflow: hidden;
+}
+
+.enhanced-task-card:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-medium);
+}
+
+.enhanced-task-card.completed {
+  opacity: 0.45;
+}
+
+.enhanced-task-card.dragging {
+  opacity: 0.4;
+}
+
+.task-card-priority-stripe {
+  width: 3px;
+  flex-shrink: 0;
+}
+
+.task-card-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  min-width: 0;
+}
+
+.task-card-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.enhanced-task-card.completed .task-card-name {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.task-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Execution type badges (only AI, Hybrid shown) */
+.exec-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.exec-ai {
+  background: #eef2ff;
+  color: #6366f1;
+}
+
+.exec-hybrid {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+/* Due date badges */
+.due-badge {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.due-badge.overdue {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.due-badge.due-today {
+  color: #ea580c;
+  font-weight: 600;
+}
+
+.due-badge.due-tomorrow {
+  color: var(--warning);
+}
+
+/* Subtask count badge */
+.subtask-count-badge {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Time badge */
+.task-time-badge {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* Compact card overrides */
+.enhanced-task-card.compact .task-card-body {
+  padding: 6px 10px;
+}
+
+.enhanced-task-card.compact .task-card-name {
+  font-size: 12px;
+}
+
+/* --- Project List View Groups --- */
+
+.project-list-group {
+  margin-bottom: 16px;
+}
+
+.project-list-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+  user-select: none;
+}
+
+.project-list-group-header:hover {
+  background: var(--bg-hover);
+}
+
+.group-toggle {
+  font-size: 10px;
+  color: var(--text-muted);
+  width: 14px;
+  text-align: center;
+}
+
+.group-color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.group-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.project-list-group-tasks {
+  padding-left: 12px;
+  margin-top: 4px;
+}
+
+/* --- Project Board View --- */
+
+.project-board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+
+.project-board-column {
+  flex: 1;
+  min-width: 200px;
+  background: var(--bg-paper);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+}
+
+.project-board-column-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.project-board-column-header h3 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.column-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.column-dot.todo { background: #6b7280; }
+.column-dot.in-progress { background: #d97706; }
+.column-dot.waiting { background: #dc2626; }
+.column-dot.done { background: #059669; }
+
+.column-count {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-white);
+  padding: 1px 8px;
+  border-radius: 10px;
+}
+
+.project-board-tasks {
+  padding: 8px;
+  flex: 1;
+  min-height: 60px;
+  transition: background var(--transition);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.project-board-tasks.drag-over {
+  background: var(--accent-light);
+  border: 2px dashed var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+/* --- Project Timeline View --- */
+
+.project-timeline {
+  background: var(--bg-white);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.project-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-paper);
+}
+
+.timeline-nav-btn {
+  padding: 4px 12px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--bg-white);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.timeline-nav-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.timeline-range-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+  text-align: center;
+}
+
+.timeline-range-toggle {
+  display: flex;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.timeline-range-btn {
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.timeline-range-btn.active {
+  background: var(--bg-white);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-timeline-grid {
+  display: grid;
+  overflow-x: auto;
+}
+
+.timeline-day-header {
+  padding: 8px 4px;
+  text-align: center;
+  border-right: 1px solid var(--border-light);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-paper);
+  min-width: 36px;
+}
+
+.timeline-day-header .day-name {
+  display: block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.timeline-day-header .day-num {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.timeline-day-header.today {
+  background: var(--accent-light);
+}
+
+.timeline-day-header.today .day-num {
+  color: var(--accent);
+}
+
+.timeline-day-header.weekend {
+  background: var(--bg-hover);
+}
+
+.timeline-tasks-area {
+  display: grid;
+  gap: 4px;
+  padding: 8px 0;
+}
+
+/* Timeline Legend */
+.timeline-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 16px;
+  border-bottom: 1px solid var(--border-light);
+  background: var(--bg-paper);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.timeline-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+}
+
+.legend-dot.exec-ai { background: #6366f1; }
+.legend-dot.exec-manual { background: #059669; }
+.legend-dot.exec-hybrid { background: #0284c7; }
+.legend-dot.priority-urgent { background: #ef4444; }
+.legend-dot.priority-high { background: #f97316; }
+.legend-dot.priority-medium { background: #eab308; }
+
+.timeline-legend-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--border-light);
+}
+
+/* Timeline Task Bar */
+.timeline-task-bar {
+  padding: 5px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity var(--transition);
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border-left: 3px solid transparent;
+}
+
+.timeline-task-bar .tbar-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+
+.timeline-task-bar .tbar-status {
+  font-size: 10px;
+  opacity: 0.85;
+  flex-shrink: 0;
+}
+
+.timeline-task-bar .tbar-priority {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fef08a;
+  flex-shrink: 0;
+}
+
+.timeline-task-bar .tbar-meta {
+  font-size: 10px;
+  opacity: 0.75;
+  background: rgba(255,255,255,0.18);
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Priority left border */
+.timeline-task-bar.priority-urgent { border-left-color: #ef4444; }
+.timeline-task-bar.priority-high { border-left-color: #f97316; }
+.timeline-task-bar.priority-medium { border-left-color: #eab308; }
+.timeline-task-bar.priority-low { border-left-color: #22c55e; }
+
+.timeline-task-bar:hover {
+  opacity: 0.85;
+}
+
+.timeline-task-bar.exec-ai {
+  background: #6366f1;
+}
+
+.timeline-task-bar.exec-manual {
+  background: #059669;
+}
+
+.timeline-task-bar.exec-hybrid {
+  background: #0284c7;
+}
+
+.timeline-task-bar.completed {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.timeline-no-date {
+  padding: 16px;
+  border-top: 1px solid var(--border-light);
+}
+
+.timeline-no-date h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.timeline-no-date-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}

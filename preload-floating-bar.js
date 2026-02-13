@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('floatingBarApi', {
   onTaskUpdate: (callback) => {
+    ipcRenderer.removeAllListeners('floating-bar-task');
     ipcRenderer.on('floating-bar-task', (event, task) => callback(task));
   },
   completeTask: (taskId) => ipcRenderer.send('floating-bar-complete', taskId),

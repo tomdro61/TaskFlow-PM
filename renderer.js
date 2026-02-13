@@ -66,11 +66,22 @@ class TaskFlowApp {
     this._projectViewState = {};
     this._projectTimelineState = {};
 
+    // Task index for O(1) lookups (populated by rebuildTaskIndex)
+    this._taskIndex = new Map();
+
     this.init();
   }
 
   async init() {
-    this.data = await window.api.loadData();
+    try {
+      this.data = await window.api.loadData();
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      this.data = { projects: [], tags: [], settings: {} };
+      this.showErrorBanner('Failed to load data. Starting with empty state.');
+    }
+
+    this.rebuildTaskIndex();
 
     // Migrate old single workingOnTaskId to array
     if (this.data.workingOnTaskId && !this.data.workingOnTaskIds) {
@@ -250,14 +261,21 @@ class TaskFlowApp {
     // Reload data and refresh
     window.api.loadData().then(data => {
       this.data = data;
+      this.rebuildTaskIndex();
       this.render();
     });
   }
 
   async refreshData() {
-    this.data = await window.api.loadData();
-    this.render();
-    this.showToast('Data refreshed');
+    try {
+      this.data = await window.api.loadData();
+      this.rebuildTaskIndex();
+      this.render();
+      this.showToast('Data refreshed');
+    } catch (err) {
+      console.error('Failed to refresh data:', err);
+      this.showToast('Failed to refresh data', 3000);
+    }
   }
 
   showToast(message, duration = 2000) {
@@ -282,6 +300,20 @@ class TaskFlowApp {
     }, duration);
   }
 
+  showErrorBanner(message) {
+    const existing = document.querySelector('.error-banner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.className = 'error-banner';
+    banner.innerHTML = `
+      <span>${this.escapeHtml(message)}</span>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:inherit;cursor:pointer;font-size:18px;">&times;</button>
+    `;
+    banner.style.cssText = 'background:#fef2f2;color:#991b1b;border:1px solid #fecaca;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;font-size:14px;';
+    document.body.prepend(banner);
+  }
+
   // ── Undo System ────────────────────────────────────────────────
 
   pushUndo(description, undoFn) {
@@ -303,7 +335,13 @@ class TaskFlowApp {
 
   // Data Management
   async saveData() {
-    await window.api.saveData(this.data);
+    try {
+      await window.api.saveData(this.data);
+      this.rebuildTaskIndex();
+    } catch (err) {
+      console.error('Failed to save data:', err);
+      this.showToast('Failed to save data', 3000);
+    }
   }
 
   generateId() {
@@ -426,16 +464,23 @@ class TaskFlowApp {
     return false;
   }
 
-  findTask(taskId) {
+  rebuildTaskIndex() {
+    this._taskIndex.clear();
+    if (!this.data?.projects) return;
     for (const project of this.data.projects) {
-      const task = project.tasks.find(t => t.id === taskId);
-      if (task) return task;
-      for (const t of project.tasks) {
-        const subtask = t.subtasks.find(st => st.id === taskId);
-        if (subtask) return subtask;
+      for (const task of project.tasks) {
+        this._taskIndex.set(task.id, task);
+        if (task.subtasks) {
+          for (const subtask of task.subtasks) {
+            this._taskIndex.set(subtask.id, subtask);
+          }
+        }
       }
     }
-    return null;
+  }
+
+  findTask(taskId) {
+    return this._taskIndex.get(taskId) || null;
   }
 
   getAllTasks(includeSubtasks = false) {
@@ -816,6 +861,9 @@ class TaskFlowApp {
     // Add tag button
     document.getElementById('add-tag-btn').addEventListener('click', () => this.openTagModal());
 
+    // Refresh data button
+    document.getElementById('refresh-data-btn').addEventListener('click', () => this.refreshData());
+
     // MCP Tools button
     document.getElementById('mcp-tools-btn').addEventListener('click', () => {
       this.openModal('mcp-tools-modal');
@@ -1099,6 +1147,124 @@ class TaskFlowApp {
 
     // Listen for actions from native pill window
     window.api.onPillAction((action) => this.handlePillAction(action));
+
+    // ── Task list/board container delegation ──
+    // Handles clicks on task items, board tasks, and subtasks created by
+    // createTaskElement / createBoardTaskElement / createSubtaskElement
+    const tasksContainer = document.getElementById('tasks-container');
+    if (tasksContainer) {
+      tasksContainer.addEventListener('click', (e) => {
+        const target = e.target;
+
+        // Task checkbox (toggle status)
+        const checkbox = target.closest('[data-action="toggle"]');
+        if (checkbox) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.toggleTaskStatus(checkbox.dataset.taskId);
+          return;
+        }
+
+        // Task edit button
+        const editBtn = target.closest('[data-action="edit"]');
+        if (editBtn) {
+          e.stopPropagation();
+          const taskItem = editBtn.closest('.task-item');
+          if (taskItem) this.openTaskModal(taskItem.dataset.id);
+          return;
+        }
+
+        // Task delete button
+        const deleteBtn = target.closest('[data-action="delete"]');
+        if (deleteBtn) {
+          e.stopPropagation();
+          const taskItem = deleteBtn.closest('.task-item');
+          if (taskItem) this.confirmDeleteTask(taskItem.dataset.id);
+          return;
+        }
+
+        // Dependencies button/badge
+        const depBtn = target.closest('[data-action="dependencies"]');
+        if (depBtn) {
+          e.stopPropagation();
+          const taskItem = depBtn.closest('.task-item');
+          if (taskItem) this.openDependencyModal(taskItem.dataset.id);
+          return;
+        }
+
+        // Subtask checkbox
+        const subtaskCheckbox = target.closest('.subtask-checkbox');
+        if (subtaskCheckbox) {
+          e.preventDefault();
+          e.stopPropagation();
+          const subtaskItem = subtaskCheckbox.closest('.subtask-item');
+          if (subtaskItem?.dataset.subtaskId) {
+            this.toggleTaskStatus(subtaskItem.dataset.subtaskId);
+          }
+          return;
+        }
+
+        // Subtasks toggle (collapsible)
+        const subtasksToggle = target.closest('.subtasks-toggle');
+        if (subtasksToggle) {
+          e.stopPropagation();
+          const taskItem = subtasksToggle.closest('.task-item');
+          if (taskItem) {
+            if (!this._collapsedSubtasks) this._collapsedSubtasks = {};
+            this._collapsedSubtasks[taskItem.dataset.id] = !this._collapsedSubtasks[taskItem.dataset.id];
+            this.renderTasks();
+          }
+          return;
+        }
+
+        // Upcoming date header toggle
+        const upcomingHeader = target.closest('.upcoming-date-header');
+        if (upcomingHeader && upcomingHeader.dataset.dateKey) {
+          if (!this._upcomingCollapsedDates) this._upcomingCollapsedDates = {};
+          this._upcomingCollapsedDates[upcomingHeader.dataset.dateKey] = !this._upcomingCollapsedDates[upcomingHeader.dataset.dateKey];
+          this.renderTasks();
+          return;
+        }
+
+        // Board task click
+        const boardTask = target.closest('.board-task');
+        if (boardTask) {
+          this.selectTask(boardTask.dataset.id, boardTask);
+          this.openDetailPanel(boardTask.dataset.id);
+          return;
+        }
+
+        // Task item click (select + open detail)
+        const taskItem = target.closest('.task-item');
+        if (taskItem) {
+          this.selectTask(taskItem.dataset.id, taskItem);
+          this.openDetailPanel(taskItem.dataset.id);
+        }
+      });
+
+      // Mousedown on checkbox to prevent text selection during rapid clicks
+      tasksContainer.addEventListener('mousedown', (e) => {
+        if (e.target.closest('[data-action="toggle"]')) {
+          e.stopPropagation();
+        }
+      });
+
+      // Board drag events
+      tasksContainer.addEventListener('dragstart', (e) => {
+        const boardTask = e.target.closest('.board-task');
+        if (boardTask) {
+          e.dataTransfer.setData('text/plain', boardTask.dataset.id);
+          boardTask.classList.add('dragging');
+        }
+      });
+
+      tasksContainer.addEventListener('dragend', (e) => {
+        const boardTask = e.target.closest('.board-task');
+        if (boardTask) {
+          boardTask.classList.remove('dragging');
+        }
+      });
+    }
 
     // Keyboard shortcuts
     document.addEventListener('keydown', (e) => {
@@ -1749,6 +1915,12 @@ class TaskFlowApp {
   // View Management
   setView(view) {
     this.currentView = view;
+
+    // Reset global filter when switching views to prevent stale filter state
+    this.filterStatus = 'all';
+    const filterSelect = document.getElementById('filter-status');
+    if (filterSelect) filterSelect.value = 'all';
+
     document.querySelectorAll('.nav-item[data-view]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.view === view);
     });
@@ -2432,6 +2604,69 @@ class TaskFlowApp {
     if (!container) return;
     container.innerHTML = '';
 
+    // Set up event delegation once on the projects nav section (covers both favorites and categories)
+    const projectsSection = container.closest('.nav-section-projects') || container;
+    if (!projectsSection._delegated) {
+      projectsSection._delegated = true;
+
+      projectsSection.addEventListener('click', (e) => {
+        const target = e.target;
+
+        // Category edit button
+        const editBtn = target.closest('.category-edit');
+        if (editBtn) {
+          e.stopPropagation();
+          const group = editBtn.closest('.category-group');
+          if (group?.dataset.categoryId) {
+            this.openCategoryModal(group.dataset.categoryId);
+          }
+          return;
+        }
+
+        // Category header click (toggle collapse)
+        const header = target.closest('.category-header');
+        if (header) {
+          const group = header.closest('.category-group');
+          if (group?.dataset.categoryId) {
+            this.toggleCategoryCollapsed(group.dataset.categoryId);
+          } else if (group) {
+            // Uncategorized group — toggle manually
+            group.classList.toggle('collapsed');
+            const projectsEl = group.querySelector('.category-projects');
+            if (projectsEl) {
+              const count = projectsEl.children.length;
+              projectsEl.style.maxHeight = group.classList.contains('collapsed') ? '0' : (count * 40 + 8) + 'px';
+            }
+          }
+          return;
+        }
+
+        // Project favorite button
+        const favBtn = target.closest('.project-favorite-btn');
+        if (favBtn) {
+          e.stopPropagation();
+          const projectItem = favBtn.closest('.project-item');
+          if (projectItem) this.toggleFavorite(projectItem.dataset.id);
+          return;
+        }
+
+        // Project edit button
+        const projEditBtn = target.closest('.project-edit');
+        if (projEditBtn) {
+          e.stopPropagation();
+          const projectItem = projEditBtn.closest('.project-item');
+          if (projectItem) this.openProjectModal(projectItem.dataset.id);
+          return;
+        }
+
+        // Project item click (navigate to project)
+        const projectItem = target.closest('.project-item');
+        if (projectItem) {
+          this.setView(`project-${projectItem.dataset.id}`);
+        }
+      });
+    }
+
     const categories = this.data.categories || [];
     const projects = this.data.projects.filter(p => !p.isInbox);
 
@@ -2459,20 +2694,6 @@ class TaskFlowApp {
         <div class="category-projects" style="max-height: ${category.collapsed ? 0 : categoryProjects.length * 40 + 8}px"></div>
       `;
 
-      // Toggle collapse on header click
-      group.querySelector('.category-header').addEventListener('click', (e) => {
-        if (!e.target.classList.contains('category-edit')) {
-          this.toggleCategoryCollapsed(category.id);
-        }
-      });
-
-      // Edit category
-      group.querySelector('.category-edit').addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.openCategoryModal(category.id);
-      });
-
-      // Add projects to category
       const projectsContainer = group.querySelector('.category-projects');
       for (const project of categoryProjects) {
         projectsContainer.appendChild(this.createProjectItem(project, false));
@@ -2500,16 +2721,6 @@ class TaskFlowApp {
         <div class="category-projects" style="max-height: ${uncategorized.length * 40 + 8}px"></div>
       `;
 
-      group.querySelector('.category-header').addEventListener('click', () => {
-        group.classList.toggle('collapsed');
-        const projectsContainer = group.querySelector('.category-projects');
-        if (group.classList.contains('collapsed')) {
-          projectsContainer.style.maxHeight = '0';
-        } else {
-          projectsContainer.style.maxHeight = uncategorized.length * 40 + 8 + 'px';
-        }
-      });
-
       const projectsContainer = group.querySelector('.category-projects');
       for (const project of uncategorized) {
         projectsContainer.appendChild(this.createProjectItem(project, false));
@@ -2536,23 +2747,6 @@ class TaskFlowApp {
       </button>
       <button class="project-edit" title="Edit">&#9998;</button>
     `;
-
-    el.addEventListener('click', (e) => {
-      if (!e.target.classList.contains('project-edit') &&
-          !e.target.classList.contains('project-favorite-btn')) {
-        this.setView(`project-${project.id}`);
-      }
-    });
-
-    el.querySelector('.project-favorite-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.toggleFavorite(project.id);
-    });
-
-    el.querySelector('.project-edit').addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.openProjectModal(project.id);
-    });
 
     return el;
   }
@@ -3169,16 +3363,14 @@ class TaskFlowApp {
       // Create date header
       const header = document.createElement('div');
       header.className = `upcoming-date-header ${isCollapsed ? 'collapsed' : ''}`;
+      header.dataset.dateKey = date;
       header.innerHTML = `
         <span class="upcoming-date-toggle">${isCollapsed ? '▶' : '▼'}</span>
         <span class="upcoming-date-label">${this.formatUpcomingDate(date, today)}</span>
         <span class="upcoming-date-count">${taskCount} task${taskCount !== 1 ? 's' : ''}${scheduledCount > 0 ? ` (${scheduledCount} scheduled)` : ''}</span>
       `;
 
-      header.addEventListener('click', () => {
-        this._upcomingCollapsedDates[date] = !this._upcomingCollapsedDates[date];
-        this.renderTasks();
-      });
+      // Click handled via delegation on #tasks-container
 
       dateGroup.appendChild(header);
 
@@ -3445,39 +3637,7 @@ class TaskFlowApp {
       </div>
     `;
 
-    // Event listeners - use both click and mousedown for reliability
-    const checkbox = el.querySelector('[data-action="toggle"]');
-    checkbox.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.toggleTaskStatus(task.id);
-    });
-    checkbox.addEventListener('mousedown', (e) => {
-      e.stopPropagation();
-    });
-
-    el.querySelector('[data-action="edit"]').addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.openTaskModal(task.id);
-    });
-
-    el.querySelector('[data-action="delete"]').addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.confirmDeleteTask(task.id);
-    });
-
-    // Dependency button/badges
-    el.querySelectorAll('[data-action="dependencies"]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.openDependencyModal(task.id);
-      });
-    });
-
-    el.addEventListener('click', () => {
-      this.selectTask(task.id, el);
-      this.openDetailPanel(task.id);
-    });
+    // Event listeners handled via delegation on #tasks-container (see bindEvents)
 
     // Render subtasks
     if (task.subtasks && task.subtasks.length > 0) {
@@ -3502,11 +3662,7 @@ class TaskFlowApp {
           <span class="subtasks-toggle-icon">${isCollapsed ? '▶' : '▼'}</span>
           <span class="subtasks-toggle-label">${completed}/${total} subtasks</span>
         `;
-        toggleBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this._collapsedSubtasks[task.id] = !this._collapsedSubtasks[task.id];
-          this.renderTasks();
-        });
+        // Click handled via delegation on #tasks-container
         subtasksWrapper.appendChild(toggleBtn);
       }
 
@@ -3530,6 +3686,7 @@ class TaskFlowApp {
   createSubtaskElement(subtask) {
     const el = document.createElement('div');
     el.className = `subtask-item ${subtask.status === 'done' ? 'completed' : ''}`;
+    el.dataset.subtaskId = subtask.id;
     let assignedBadge = '';
     if (subtask.assignedTo === 'claude') {
       assignedBadge = '<span class="assigned-badge claude-badge" title="Assigned to Claude">&#129302;</span>';
@@ -3542,12 +3699,7 @@ class TaskFlowApp {
       ${assignedBadge}
     `;
 
-    const checkbox = el.querySelector('.subtask-checkbox');
-    checkbox.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.toggleTaskStatus(subtask.id);
-    });
+    // Click handled via delegation on #tasks-container
 
     return el;
   }
@@ -3614,20 +3766,7 @@ class TaskFlowApp {
       </div>
     `;
 
-    el.addEventListener('click', () => {
-      this.selectTask(task.id, el);
-      this.openDetailPanel(task.id);
-    });
-
-    // Drag events
-    el.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', task.id);
-      el.classList.add('dragging');
-    });
-
-    el.addEventListener('dragend', () => {
-      el.classList.remove('dragging');
-    });
+    // Click and drag events handled via delegation on #tasks-container
 
     return el;
   }
@@ -6813,179 +6952,87 @@ class TaskFlowApp {
   // Legacy methods removed — priority sections and completed section replaced by flat queue
 
   bindTodayViewEvents() {
-    // Plan My Day button
-    const planBtn = document.getElementById('plan-my-day-btn');
-    if (planBtn) {
-      planBtn.onclick = () => this.planMyDay();
-    }
+    // Use event delegation on the stable #command-center-view container
+    // This is called once; delegated handlers survive re-renders without leaking
+    const view = document.getElementById('command-center-view');
+    if (!view || view._todayDelegated) return;
+    view._todayDelegated = true;
 
-    // Coach Me button
-    const coachBtn = document.getElementById('coach-me-btn');
-    if (coachBtn) {
-      coachBtn.onclick = () => this.coachMePrompt();
-    }
+    // ── Click delegation ──
+    view.addEventListener('click', (e) => {
+      const target = e.target;
 
-    // Roll banner dismiss
-    const rollDismiss = document.getElementById('roll-banner-dismiss');
-    if (rollDismiss) {
-      rollDismiss.onclick = () => {
+      // Plan My Day
+      if (target.closest('#plan-my-day-btn')) { this.planMyDay(); return; }
+
+      // Coach Me
+      if (target.closest('#coach-me-btn')) { this.coachMePrompt(); return; }
+
+      // Roll banner dismiss
+      if (target.closest('#roll-banner-dismiss')) {
         document.getElementById('today-roll-banner')?.classList.add('hidden');
-      };
-    }
+        return;
+      }
 
-    // Complete task buttons — shows toast, auto-advances Working On
-    document.querySelectorAll('.today-task-check').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      // Complete task buttons
+      const checkBtn = target.closest('.today-task-check');
+      if (checkBtn) {
         e.stopPropagation();
-        const taskId = btn.dataset.taskId;
+        const taskId = checkBtn.dataset.taskId;
         const task = this.findTask(taskId);
         const taskName = task ? task.name : 'Task';
-        const item = btn.closest('.today-task-item');
+        const item = checkBtn.closest('.today-task-item');
         item?.classList.add('completing');
-
         this.showCompletionSummaryModal(taskId, () => {
           if (this.todayView.workingOnTaskIds.includes(taskId)) {
             this.removeActiveTask(taskId);
           }
           this.showToast(`${taskName} completed`);
-          this.renderTodayView();
+          // Animate removal instead of full re-render
+          if (item) {
+            item.classList.add('task-removed');
+            item.addEventListener('transitionend', () => {
+              item.remove();
+              // Update stats counts without full re-render
+              this.updateTodayStats();
+            }, { once: true });
+          } else {
+            this.renderTodayView();
+          }
         });
-      });
-    });
+        return;
+      }
 
-    // Focus on task buttons - adds to active list
-    document.querySelectorAll('.today-task-focus').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      // Focus on task buttons
+      const focusBtn = target.closest('.today-task-focus');
+      if (focusBtn) {
         e.stopPropagation();
-        const taskId = btn.dataset.taskId;
+        const taskId = focusBtn.dataset.taskId;
         this.addActiveTask(taskId);
         this.updateFloatingBar();
         this.renderTodayView();
-      });
-    });
+        return;
+      }
 
-    // Up Next subtask expand toggles
-    document.querySelectorAll('.up-next-subtask-toggle').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      // Up Next subtask expand toggles
+      const subtaskToggle = target.closest('.up-next-subtask-toggle');
+      if (subtaskToggle) {
         e.stopPropagation();
-        const taskId = btn.dataset.taskId;
+        const taskId = subtaskToggle.dataset.taskId;
         if (this.todayView.expandedUpNextIds.has(taskId)) {
           this.todayView.expandedUpNextIds.delete(taskId);
         } else {
           this.todayView.expandedUpNextIds.add(taskId);
         }
         this.renderTodayView();
-      });
-    });
+        return;
+      }
 
-    // Up Next subtask checkboxes
-    document.querySelectorAll('.up-next-subtask-check').forEach(cb => {
-      cb.addEventListener('change', (e) => {
+      // Active card complete buttons
+      const activeComplete = target.closest('.active-card-complete');
+      if (activeComplete) {
         e.stopPropagation();
-        const taskId = e.target.dataset.taskId;
-        const subtaskId = e.target.dataset.subtaskId;
-        const task = this.findTask(taskId);
-        if (task) {
-          const subtask = task.subtasks.find(s => s.id === subtaskId);
-          if (subtask) {
-            subtask.status = e.target.checked ? 'done' : 'todo';
-            this.saveData();
-            this.renderTodayView();
-          }
-        }
-      });
-    });
-
-    // Click task to open details
-    document.querySelectorAll('.today-task-item').forEach(item => {
-      item.addEventListener('click', (e) => {
-        if (!e.target.closest('button')) {
-          this.openDetailPanel(item.dataset.taskId);
-        }
-      });
-
-      // Drag and drop for reordering
-      item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', item.dataset.taskId);
-        e.dataTransfer.effectAllowed = 'move';
-        item.classList.add('dragging');
-        setTimeout(() => item.style.opacity = '0.5', 0);
-      });
-
-      item.addEventListener('dragend', () => {
-        item.classList.remove('dragging');
-        item.style.opacity = '1';
-        document.querySelectorAll('.today-task-item.drag-over').forEach(el => {
-          el.classList.remove('drag-over');
-        });
-      });
-
-      item.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const dragging = document.querySelector('.today-task-item.dragging');
-        if (dragging && dragging !== item) {
-          item.classList.add('drag-over');
-        }
-      });
-
-      item.addEventListener('dragleave', () => {
-        item.classList.remove('drag-over');
-      });
-
-      item.addEventListener('drop', (e) => {
-        e.preventDefault();
-        item.classList.remove('drag-over');
-        const draggedTaskId = e.dataTransfer.getData('text/plain');
-        const targetTaskId = item.dataset.taskId;
-
-        if (draggedTaskId && targetTaskId && draggedTaskId !== targetTaskId) {
-          this.reorderTodayTask(draggedTaskId, targetTaskId);
-        }
-      });
-    });
-
-    // Working On Now section events - including drop zone
-    const workingNowSection = document.getElementById('today-working-now');
-    if (workingNowSection) {
-      workingNowSection.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        workingNowSection.classList.add('drop-target');
-      });
-
-      workingNowSection.addEventListener('dragleave', (e) => {
-        if (!workingNowSection.contains(e.relatedTarget)) {
-          workingNowSection.classList.remove('drop-target');
-        }
-      });
-
-      workingNowSection.addEventListener('drop', (e) => {
-        e.preventDefault();
-        workingNowSection.classList.remove('drop-target');
-        const taskId = e.dataTransfer.getData('text/plain');
-        if (taskId) {
-          this.addActiveTask(taskId);
-          this.updateFloatingBar();
-          this.renderTodayView();
-        }
-      });
-    }
-
-    const workingNowClear = document.getElementById('working-now-clear');
-    if (workingNowClear) {
-      workingNowClear.onclick = () => {
-        this.todayView.workingOnTaskIds = [];
-        this.data.workingOnTaskIds = [];
-        this.saveData();
-        this.updateFloatingBar();
-        this.renderTodayView();
-      };
-    }
-
-    // Active card complete buttons
-    document.querySelectorAll('.active-card-complete').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const taskId = btn.dataset.taskId;
+        const taskId = activeComplete.dataset.taskId;
         const task = this.findTask(taskId);
         const taskName = task ? task.name : 'Task';
         this.showCompletionSummaryModal(taskId, () => {
@@ -6994,93 +7041,198 @@ class TaskFlowApp {
           this.showToast(`${taskName} completed`);
           this.renderTodayView();
         });
-      });
-    });
+        return;
+      }
 
-    // Active card remove buttons
-    document.querySelectorAll('.active-card-remove').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      // Active card remove buttons
+      const activeRemove = target.closest('.active-card-remove');
+      if (activeRemove) {
         e.stopPropagation();
-        const taskId = btn.dataset.taskId;
+        const taskId = activeRemove.dataset.taskId;
         this.removeActiveTask(taskId);
         this.updateFloatingBar();
         this.renderTodayView();
-      });
+        return;
+      }
+
+      // Click active card info to open details
+      const activeInfo = target.closest('.active-card-info');
+      if (activeInfo && !target.closest('button')) {
+        this.openDetailPanel(activeInfo.dataset.taskId);
+        return;
+      }
+
+      // Working On Now clear
+      if (target.closest('#working-now-clear')) {
+        this.todayView.workingOnTaskIds = [];
+        this.data.workingOnTaskIds = [];
+        this.saveData();
+        this.updateFloatingBar();
+        this.renderTodayView();
+        return;
+      }
+
+      // Add tasks button
+      if (target.closest('#today-add-tasks')) { this.setView('master-list'); return; }
+
+      // Start focus button
+      if (target.closest('#today-start-focus')) { this.startFocusMode(); return; }
+
+      // Click task item to open details (only if not clicking a button)
+      const taskItem = target.closest('.today-task-item');
+      if (taskItem && !target.closest('button')) {
+        this.openDetailPanel(taskItem.dataset.taskId);
+        return;
+      }
     });
 
-    // Subtask checkboxes in active cards
-    document.querySelectorAll('.active-card-subtask-check').forEach(cb => {
-      cb.addEventListener('change', (e) => {
+    // ── Change delegation (for checkboxes) ──
+    view.addEventListener('change', (e) => {
+      // Up Next subtask checkboxes
+      const upNextCheck = e.target.closest('.up-next-subtask-check');
+      if (upNextCheck) {
         e.stopPropagation();
-        const taskId = e.target.dataset.taskId;
-        const subtaskId = e.target.dataset.subtaskId;
+        const taskId = upNextCheck.dataset.taskId;
+        const subtaskId = upNextCheck.dataset.subtaskId;
         const task = this.findTask(taskId);
         if (task) {
           const subtask = task.subtasks.find(s => s.id === subtaskId);
           if (subtask) {
-            subtask.status = e.target.checked ? 'done' : 'todo';
+            subtask.status = upNextCheck.checked ? 'done' : 'todo';
             this.saveData();
-            this.renderActiveTasks();
-            this.bindTodayViewEvents();
+            this.renderTodayView();
           }
         }
-      });
-    });
+        return;
+      }
 
-    // Click active card info to open details
-    document.querySelectorAll('.active-card-info').forEach(el => {
-      el.addEventListener('click', (e) => {
-        if (!e.target.closest('button')) {
-          this.openDetailPanel(el.dataset.taskId);
+      // Active card subtask checkboxes
+      const activeCheck = e.target.closest('.active-card-subtask-check');
+      if (activeCheck) {
+        e.stopPropagation();
+        const taskId = activeCheck.dataset.taskId;
+        const subtaskId = activeCheck.dataset.subtaskId;
+        const task = this.findTask(taskId);
+        if (task) {
+          const subtask = task.subtasks.find(s => s.id === subtaskId);
+          if (subtask) {
+            subtask.status = activeCheck.checked ? 'done' : 'todo';
+            this.saveData();
+            this.renderActiveTasks();
+          }
         }
-      });
+      }
     });
 
-    // Task-specific notes (in Working On Now section)
-    const taskNotesInput = document.getElementById('working-now-notes-input');
-    if (taskNotesInput) {
-      let saveTimeout;
-      taskNotesInput.addEventListener('input', () => {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
+    // ── Drag & drop delegation ──
+    view.addEventListener('dragstart', (e) => {
+      const item = e.target.closest('.today-task-item');
+      if (item) {
+        e.dataTransfer.setData('text/plain', item.dataset.taskId);
+        e.dataTransfer.effectAllowed = 'move';
+        item.classList.add('dragging');
+        setTimeout(() => item.style.opacity = '0.5', 0);
+      }
+    });
+
+    view.addEventListener('dragend', (e) => {
+      const item = e.target.closest('.today-task-item');
+      if (item) {
+        item.classList.remove('dragging');
+        item.style.opacity = '1';
+        document.querySelectorAll('.today-task-item.drag-over').forEach(el => {
+          el.classList.remove('drag-over');
+        });
+      }
+    });
+
+    view.addEventListener('dragover', (e) => {
+      const item = e.target.closest('.today-task-item');
+      if (item) {
+        e.preventDefault();
+        const dragging = document.querySelector('.today-task-item.dragging');
+        if (dragging && dragging !== item) {
+          item.classList.add('drag-over');
+        }
+      }
+      // Working On Now drop zone
+      const workingNow = e.target.closest('#today-working-now');
+      if (workingNow) {
+        e.preventDefault();
+        workingNow.classList.add('drop-target');
+      }
+    });
+
+    view.addEventListener('dragleave', (e) => {
+      const item = e.target.closest('.today-task-item');
+      if (item) {
+        item.classList.remove('drag-over');
+      }
+      const workingNow = e.target.closest('#today-working-now');
+      if (workingNow && !workingNow.contains(e.relatedTarget)) {
+        workingNow.classList.remove('drop-target');
+      }
+    });
+
+    view.addEventListener('drop', (e) => {
+      const item = e.target.closest('.today-task-item');
+      if (item) {
+        e.preventDefault();
+        item.classList.remove('drag-over');
+        const draggedTaskId = e.dataTransfer.getData('text/plain');
+        const targetTaskId = item.dataset.taskId;
+        if (draggedTaskId && targetTaskId && draggedTaskId !== targetTaskId) {
+          this.reorderTodayTask(draggedTaskId, targetTaskId);
+        }
+        return;
+      }
+      // Working On Now drop zone
+      const workingNow = e.target.closest('#today-working-now');
+      if (workingNow) {
+        e.preventDefault();
+        workingNow.classList.remove('drop-target');
+        const taskId = e.dataTransfer.getData('text/plain');
+        if (taskId) {
+          this.addActiveTask(taskId);
+          this.updateFloatingBar();
+          this.renderTodayView();
+        }
+      }
+    });
+
+    // ── Input delegation (debounced notes) ──
+    let taskNotesSaveTimeout;
+    let dailyNotesSaveTimeout;
+    view.addEventListener('input', (e) => {
+      if (e.target.id === 'working-now-notes-input') {
+        clearTimeout(taskNotesSaveTimeout);
+        taskNotesSaveTimeout = setTimeout(() => {
           const firstActiveId = this.todayView.workingOnTaskIds[0];
           if (firstActiveId) {
             const task = this.findTask(firstActiveId);
             if (task) {
-              task.workNotes = taskNotesInput.value;
+              task.workNotes = e.target.value;
               this.saveData();
             }
           }
         }, 500);
-      });
-    }
+      }
 
-    // Daily notes for recaps
-    const dailyNotesInput = document.getElementById('today-daily-notes-input');
-    if (dailyNotesInput) {
-      let saveTimeout;
-      dailyNotesInput.addEventListener('input', () => {
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(() => {
+      if (e.target.id === 'today-daily-notes-input') {
+        clearTimeout(dailyNotesSaveTimeout);
+        dailyNotesSaveTimeout = setTimeout(() => {
           const today = this.getLocalDateString();
           if (!this.data.dailyNotes) this.data.dailyNotes = {};
-          this.data.dailyNotes[today] = dailyNotesInput.value;
+          this.data.dailyNotes[today] = e.target.value;
           this.saveData();
         }, 500);
-      });
-    }
+      }
+    });
+  }
 
-    // Add tasks button
-    const addBtn = document.getElementById('today-add-tasks');
-    if (addBtn) {
-      addBtn.onclick = () => this.setView('master-list');
-    }
-
-    // Start focus button
-    const focusBtn = document.getElementById('today-start-focus');
-    if (focusBtn) {
-      focusBtn.onclick = () => this.startFocusMode();
-    }
+  updateTodayStats() {
+    // Lightweight update of counts without full re-render
+    this.updateCounts();
   }
 
   // Auto-advance: remove completed tasks from active list (no auto-pick with multi-active)
@@ -8900,7 +9052,8 @@ class TaskFlowApp {
     if (!recap) return;
 
     // Convert markdown-ish content to HTML for display
-    const contentHtml = recap.content
+    // Escape first to prevent XSS, then apply markdown formatting
+    const contentHtml = this.escapeHtml(recap.content)
       .replace(/^# (.+)$/gm, '<h2>$1</h2>')
       .replace(/^## (.+)$/gm, '<h3>$1</h3>')
       .replace(/^\*(.+)\*$/gm, '<em>$1</em>')
@@ -8968,7 +9121,7 @@ class TaskFlowApp {
     const content = `
       <strong>${dateLabel}</strong><br><br>
       <strong>Rating:</strong> ${review.rating ? review.rating + '/5' : 'Not rated'}<br><br>
-      <strong>Learnings:</strong><br>${review.learnings || 'None recorded'}
+      <strong>Learnings:</strong><br>${this.escapeHtml(review.learnings || 'None recorded')}
     `;
 
     // Use existing modal infrastructure

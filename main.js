@@ -154,7 +154,8 @@ function getDefaultData() {
     ],
     settings: {
       theme: 'dark',
-      defaultView: 'list'
+      defaultView: 'list',
+      claudeQueuePath: 'C:\\Projects\\Claude\\run_queue.bat'
     }
   };
 }
@@ -258,26 +259,6 @@ ipcMain.handle('open-external', async (event, url) => {
   return true;
 });
 
-// Trigger Ctrl+Win+Space keyboard shortcut
-ipcMain.handle('trigger-shortcut', async () => {
-  const { exec } = require('child_process');
-  // Use PowerShell to send Ctrl+Win+Space
-  const psScript = `
-    Add-Type -AssemblyName System.Windows.Forms
-    [System.Windows.Forms.SendKeys]::SendWait('^{LWin} ')
-  `;
-
-  return new Promise((resolve) => {
-    exec(`powershell -Command "${psScript.replace(/\n/g, ' ')}"`, (error) => {
-      if (error) {
-        console.error('Shortcut trigger error:', error);
-        resolve(false);
-      } else {
-        resolve(true);
-      }
-    });
-  });
-});
 
 // Focus Pill Window
 function createPillWindow() {
@@ -352,7 +333,8 @@ ipcMain.on('pill-action', (event, action) => {
 // Run Claude Queue
 ipcMain.handle('run-claude-queue', async () => {
   const { exec } = require('child_process');
-  const queuePath = 'C:\\Projects\\Claude\\run_queue.bat';
+  const data = loadData();
+  const queuePath = (data.settings && data.settings.claudeQueuePath) || 'C:\\Projects\\Claude\\run_queue.bat';
 
   return new Promise((resolve) => {
     exec(`start cmd /c "${queuePath}"`, { cwd: path.dirname(queuePath) }, (error) => {

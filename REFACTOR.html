@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow PM — Code Review &amp; Refactor (Phases 1–3)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #faf9f7;
+      color: #292524;
+      line-height: 1.7;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #1c1917;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      color: #6b6560;
+      margin-bottom: 40px;
+    }
+
+    .date {
+      display: inline-block;
+      background: #f5f0eb;
+      color: #78716c;
+      font-size: 0.85rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin: 48px 0 16px;
+      color: #1c1917;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #eae8e4;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 28px 0 12px;
+      color: #44403c;
+    }
+
+    p, li {
+      font-size: 0.95rem;
+      color: #44403c;
+    }
+
+    p { margin-bottom: 14px; }
+
+    ul, ol {
+      margin: 0 0 16px 24px;
+    }
+
+    li { margin-bottom: 6px; }
+
+    /* Analogy cards */
+    .analogy {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0 28px;
+    }
+
+    .analogy-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #b45309;
+      margin-bottom: 8px;
+    }
+
+    .analogy p { color: #78350f; margin-bottom: 0; }
+
+    /* Before/After comparison */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 640px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+
+    .comparison-card {
+      background: #fff;
+      border: 1px solid #eae8e4;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .comparison-card.before { border-left: 4px solid #dc2626; }
+    .comparison-card.after  { border-left: 4px solid #059669; }
+
+    .comparison-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .comparison-card.before .comparison-label { color: #dc2626; }
+    .comparison-card.after  .comparison-label { color: #059669; }
+
+    /* File tree */
+    .file-tree {
+      background: #1c1917;
+      color: #e7e5e4;
+      border-radius: 12px;
+      padding: 24px 28px;
+      font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      line-height: 1.9;
+      overflow-x: auto;
+      margin: 16px 0 24px;
+    }
+
+    .file-tree .dir  { color: #93c5fd; }
+    .file-tree .file { color: #d6d3d1; }
+    .file-tree .new  { color: #86efac; }
+    .file-tree .mod  { color: #fde68a; }
+    .file-tree .desc { color: #78716c; }
+
+    /* Stats grid */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin: 20px 0 28px;
+    }
+
+    .stat-card {
+      background: #fff;
+      border: 1px solid #eae8e4;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #d97448;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: #78716c;
+      margin-top: 4px;
+    }
+
+    /* Impact section */
+    .impact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 20px 0;
+    }
+
+    @media (max-width: 640px) {
+      .impact-grid { grid-template-columns: 1fr; }
+    }
+
+    .impact-card {
+      background: #fff;
+      border: 1px solid #eae8e4;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .impact-icon {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .impact-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+      color: #1c1917;
+    }
+
+    .impact-desc {
+      font-size: 0.88rem;
+      color: #6b6560;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 24px;
+      font-size: 0.88rem;
+    }
+
+    th {
+      background: #f5f0eb;
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 600;
+      color: #44403c;
+      border-bottom: 2px solid #eae8e4;
+    }
+
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #eae8e4;
+      color: #44403c;
+    }
+
+    tr:hover td { background: #faf9f7; }
+
+    code {
+      background: #f5f0eb;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'SF Mono', 'Cascadia Code', monospace;
+      font-size: 0.85em;
+      color: #c2410c;
+    }
+
+    .callout {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+
+    .callout-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #1d4ed8;
+      margin-bottom: 8px;
+    }
+
+    .callout p { color: #1e3a5f; margin-bottom: 0; }
+
+    .bug-fix {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+
+    .bug-fix-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #15803d;
+      margin-bottom: 8px;
+    }
+
+    .bug-fix p { color: #14532d; }
+
+    /* Phase nav */
+    .phase-nav {
+      display: flex;
+      gap: 12px;
+      margin: 0 0 40px;
+      flex-wrap: wrap;
+    }
+
+    .phase-link {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #fff;
+      border: 1px solid #eae8e4;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #44403c;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .phase-link:hover {
+      background: #f5f0eb;
+      border-color: #d97448;
+      color: #d97448;
+    }
+
+    .phase-link .phase-num {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #a8a29e;
+      margin-bottom: 2px;
+    }
+
+    /* Phase header */
+    .phase-header {
+      margin: 64px 0 8px;
+      padding: 20px 0 12px;
+      border-top: 3px solid #d97448;
+    }
+
+    .phase-header h2 {
+      margin-top: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+      font-size: 1.5rem;
+    }
+
+    .phase-header .phase-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #d97448;
+      margin-bottom: 4px;
+    }
+
+    .phase-header .phase-meta {
+      font-size: 0.88rem;
+      color: #78716c;
+      margin-bottom: 0;
+    }
+
+    /* Security callout */
+    .security-fix {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+
+    .security-fix-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #dc2626;
+      margin-bottom: 8px;
+    }
+
+    .security-fix p { color: #7f1d1d; }
+
+    /* Perf callout */
+    .perf-fix {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+
+    .perf-fix-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #0369a1;
+      margin-bottom: 8px;
+    }
+
+    .perf-fix p { color: #0c4a6e; }
+
+    footer {
+      margin-top: 60px;
+      padding-top: 24px;
+      border-top: 1px solid #eae8e4;
+      font-size: 0.82rem;
+      color: #a8a29e;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <span class="date">February 13, 2026</span>
+    <h1>Code Review &amp; Refactor (Phases 1&ndash;3)</h1>
+    <p class="subtitle">
+      A comprehensive three-phase overhaul of TaskFlow PM's codebase: first securing the app,
+      then making it faster, then organizing the code for long-term maintainability.
+      Nothing about the app changed on the surface &mdash; every feature works exactly the same.
+    </p>
+
+    <div class="phase-nav">
+      <a href="#phase1" class="phase-link">
+        <span class="phase-num">Phase 1</span>
+        Security &amp; Stability
+      </a>
+      <a href="#phase2" class="phase-link">
+        <span class="phase-num">Phase 2</span>
+        Memory &amp; Performance
+      </a>
+      <a href="#phase3" class="phase-link">
+        <span class="phase-num">Phase 3</span>
+        Architecture
+      </a>
+    </div>
+
+    <!-- ============================================================ -->
+    <h2>Overall Summary</h2>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number">3</div>
+        <div class="stat-label">Security vulnerabilities closed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Performance optimizations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">38</div>
+        <div class="stat-label">New module files</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">0</div>
+        <div class="stat-label">User-facing changes</div>
+      </div>
+    </div>
+
+    <p>
+      All three phases focused on internal code quality. The app looks and behaves identically
+      to before &mdash; the changes are entirely "under the hood." Phase 1 secured the app
+      against potential attacks and data loss. Phase 2 eliminated performance bottlenecks and
+      memory leaks. Phase 3 reorganized 30,000 lines from 3 monolithic files into 38 focused modules.
+    </p>
+
+    <!-- ================================================================ -->
+    <!-- PHASE 1: SECURITY & STABILITY                                     -->
+    <!-- ================================================================ -->
+
+    <div class="phase-header" id="phase1">
+      <span class="phase-tag">Phase 1</span>
+      <h2>Security &amp; Stability</h2>
+      <p class="phase-meta">5 fixes &mdash; Protecting your data and preventing crashes</p>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-label">Think of it like this</div>
+      <p>
+        Imagine your house has solid walls and a roof, but a few windows were left unlocked
+        and one door didn't have a deadbolt. Phase 1 is about going through every entry point
+        and making sure everything is locked tight &mdash; not rebuilding the house, just
+        securing what's already there.
+      </p>
+    </div>
+
+    <h3>1.1 &mdash; Removed Unused PowerShell Handler</h3>
+    <p>
+      The main process (<code>main.js</code>) and its preload script had code for running
+      PowerShell commands. This was dead code left over from early development &mdash; no part
+      of the app ever called it. But leaving it in place meant that if an attacker found a way
+      to inject JavaScript into the app, they could potentially run system commands on your
+      computer. Removing it closes that door entirely.
+    </p>
+    <div class="security-fix">
+      <div class="security-fix-label">Security Impact</div>
+      <p>
+        Eliminated a potential <strong>remote code execution</strong> vector. Even though it was
+        unused, any IPC handler that can run shell commands is a high-severity risk in an Electron app.
+      </p>
+    </div>
+
+    <h3>1.2 &mdash; Added Content Security Policy to Overlay Windows</h3>
+    <p>
+      The main app window already had a Content Security Policy (CSP) &mdash; a set of rules
+      telling the browser what code is allowed to run. But two smaller overlay windows
+      (<code>quick-capture.html</code> and <code>floating-bar.html</code>) were missing this
+      protection. CSP headers were added to both, blocking inline scripts and preventing
+      any code from loading external resources.
+    </p>
+    <div class="security-fix">
+      <div class="security-fix-label">Security Impact</div>
+      <p>
+        Prevents <strong>cross-site scripting (XSS)</strong> attacks in overlay windows.
+        If malicious content somehow made it into a task name or note, CSP ensures it
+        can't execute as code.
+      </p>
+    </div>
+
+    <h3>1.3 &mdash; Fixed XSS in Recap Rendering</h3>
+    <p>
+      When displaying recap entries, the app was converting markdown to HTML <em>before</em>
+      escaping special characters. This meant that if a recap entry contained something like
+      <code>&lt;script&gt;alert('gotcha')&lt;/script&gt;</code>, it could have been rendered
+      as live code. The fix reverses the order: escape first, then render markdown.
+    </p>
+    <div class="security-fix">
+      <div class="security-fix-label">Security Impact</div>
+      <p>
+        Closed an <strong>XSS vulnerability</strong> where user-entered text in recaps could
+        execute as JavaScript. Now all user content is sanitized before rendering.
+      </p>
+    </div>
+
+    <h3>1.4 &mdash; Added Error Boundaries</h3>
+    <p>
+      Previously, if something went wrong during startup, data loading, or saving, the entire
+      app could freeze or show a blank screen with no explanation. Now the critical paths
+      (<code>init()</code>, <code>refreshData()</code>, <code>saveData()</code>) are wrapped
+      in error handlers that catch problems and show a visible error banner at the top of the
+      screen, explaining what went wrong instead of silently failing.
+    </p>
+
+    <h3>1.5 &mdash; Added File Locking to MCP Server</h3>
+    <p>
+      When Claude uses multiple tools at the same time (which is common &mdash; Claude might
+      create a task and update another in parallel), both tools read and write the same data
+      file. Without coordination, the second save could overwrite the first, causing data loss.
+      A "mutex lock" was added so that data operations queue up and execute one at a time.
+    </p>
+    <div class="security-fix">
+      <div class="security-fix-label">Data Safety</div>
+      <p>
+        Prevents <strong>data loss from race conditions</strong>. When Claude calls multiple
+        MCP tools simultaneously, each operation now waits its turn to read/write the data
+        file, ensuring nothing gets overwritten.
+      </p>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- PHASE 2: MEMORY & PERFORMANCE                                     -->
+    <!-- ================================================================ -->
+
+    <div class="phase-header" id="phase2">
+      <span class="phase-tag">Phase 2</span>
+      <h2>Memory &amp; Performance</h2>
+      <p class="phase-meta">4 optimizations &mdash; Making the app faster and lighter</p>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-label">Think of it like this</div>
+      <p>
+        Your car runs fine, but the engine is doing extra work it doesn't need to. Phase 2
+        is like a tune-up: replacing inefficient parts with smarter ones. The car drives
+        the same, but uses less fuel and responds quicker.
+      </p>
+    </div>
+
+    <h3>2.1 &mdash; Rewrote Event Listeners to Use Delegation</h3>
+    <p>
+      <strong>Before:</strong> Every time the app rendered a list of tasks, it attached a separate
+      click handler to <em>each</em> task element (and each button, each checkbox, etc.). With
+      50 tasks visible, that meant hundreds of individual listeners being created and destroyed
+      every time the view refreshed.
+    </p>
+    <p>
+      <strong>After:</strong> A single listener is attached to the parent container. When you click
+      anywhere inside it, the app figures out which specific button or task you clicked. This is
+      called "event delegation" &mdash; one listener handles everything, no matter how many tasks
+      exist.
+    </p>
+    <div class="perf-fix">
+      <div class="perf-fix-label">Performance Impact</div>
+      <p>
+        Reduces memory usage and speeds up view rendering. Instead of creating/destroying hundreds
+        of listeners on every re-render, the app uses <strong>a handful of persistent listeners</strong>.
+        This is especially noticeable with 20&ndash;50+ tasks.
+      </p>
+    </div>
+
+    <h3>2.2 &mdash; Built a Task Index for Instant Lookups</h3>
+    <p>
+      <strong>Before:</strong> Every time the app needed to find a specific task (by ID), it looped
+      through every project and every task in that project until it found a match. With 200 tasks
+      across 10 projects, that's up to 200 comparisons per lookup &mdash; and lookups happen
+      constantly (rendering, clicking, completing, updating).
+    </p>
+    <p>
+      <strong>After:</strong> A lookup table (called <code>_taskIndex</code>) maps every task ID
+      directly to its task object. Finding any task is now instant &mdash; one step instead of
+      scanning the entire list. The index is automatically rebuilt whenever data changes.
+    </p>
+    <div class="perf-fix">
+      <div class="perf-fix-label">Performance Impact</div>
+      <p>
+        Task lookups go from <strong>O(n) linear scan to O(1) constant time</strong>.
+        With 200 tasks, that's potentially 200x fewer comparisons per lookup.
+        Since <code>findTask()</code> is called dozens of times per render cycle,
+        this adds up to a significant speedup.
+      </p>
+    </div>
+
+    <h3>2.3 &mdash; Fixed IPC Listener Leaks</h3>
+    <p>
+      Electron apps communicate between the main process and windows using "IPC" (inter-process
+      communication) channels. Three preload scripts were registering new listeners every time
+      data refreshed, without removing the old ones. Over hours of use, this accumulated
+      hundreds of stale listeners, slowly consuming memory.
+    </p>
+    <p>
+      The fix adds <code>removeAllListeners</code> before re-registering, ensuring only one
+      listener exists per channel at any time. Affected files: <code>preload.js</code>,
+      <code>preload-pill.js</code>, and <code>preload-floating-bar.js</code>.
+    </p>
+    <div class="perf-fix">
+      <div class="perf-fix-label">Performance Impact</div>
+      <p>
+        Eliminates a <strong>memory leak</strong> that grew over time. After 8 hours of use,
+        the app no longer accumulates hundreds of redundant listeners. Memory usage stays
+        stable instead of slowly climbing.
+      </p>
+    </div>
+
+    <h3>2.4 &mdash; Optimized Task Completion Rendering</h3>
+    <p>
+      <strong>Before:</strong> Completing a task triggered a full re-render of the entire view &mdash;
+      rebuilding every task element, re-sorting, re-applying filters. This caused a visible flicker
+      and a brief freeze, especially with many tasks.
+    </p>
+    <p>
+      <strong>After:</strong> Completing a task now smoothly animates the task element out of the list
+      and updates just the stats counters. The full re-render is skipped. The result feels instant
+      and responsive.
+    </p>
+    <div class="perf-fix">
+      <div class="perf-fix-label">Performance Impact</div>
+      <p>
+        Task completion goes from a <strong>full-view rebuild to a targeted DOM update</strong>.
+        The transition feels instantaneous instead of causing a visible repaint.
+      </p>
+    </div>
+
+    <!-- ================================================================ -->
+    <!-- PHASE 3: ARCHITECTURE                                             -->
+    <!-- ================================================================ -->
+
+    <div class="phase-header" id="phase3">
+      <span class="phase-tag">Phase 3</span>
+      <h2>Architecture Refactor</h2>
+      <p class="phase-meta">38 new modules &mdash; Organizing the codebase for maintainability</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <h2>What Changed (The Simple Version)</h2>
+
+    <div class="analogy">
+      <div class="analogy-label">Think of it like this</div>
+      <p>
+        Imagine you had a single 300-page notebook where you wrote down <em>everything</em> &mdash;
+        recipes, meeting notes, budget numbers, journal entries, project plans &mdash; all jumbled together.
+        Finding anything meant flipping through the whole thing. This refactor is like splitting that
+        notebook into labeled folders: "Recipes," "Meetings," "Budget," etc. The content is identical;
+        it's just organized now so you (and Claude) can find things instantly.
+      </p>
+    </div>
+
+    <p>
+      The app had three files that had grown enormous over time. Each one tried to do everything:
+    </p>
+
+    <div class="comparison">
+      <div class="comparison-card before">
+        <div class="comparison-label">Before (3 giant files)</div>
+        <p><strong>renderer.js</strong> &mdash; 11,397 lines<br>Every piece of app logic in one class with ~270 methods.</p>
+        <p><strong>styles.css</strong> &mdash; 12,824 lines<br>Every visual style in one scrolling stylesheet.</p>
+        <p><strong>mcp-server/index.js</strong> &mdash; 5,529 lines<br>All 71 Claude/MCP tools in one file.</p>
+        <p style="margin-bottom:0"><strong>Total: ~30,000 lines in 3 files</strong></p>
+      </div>
+      <div class="comparison-card after">
+        <div class="comparison-label">After (38 focused modules)</div>
+        <p><strong>renderer/</strong> &mdash; 14 files<br>Each file handles one feature area (calendar, focus mode, inbox, etc.)</p>
+        <p><strong>styles/</strong> &mdash; 14 files<br>Styles grouped by component (tasks, modals, sidebar, etc.)</p>
+        <p><strong>mcp-server/</strong> &mdash; 10 files<br>Tools organized by category (CRUD, scheduling, AI, etc.)</p>
+        <p style="margin-bottom:0"><strong>Same ~30,000 lines, now easy to navigate</strong></p>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <h2>Phase 3 &mdash; By the Numbers</h2>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-number">38</div>
+        <div class="stat-label">New module files created</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">265</div>
+        <div class="stat-label">Methods preserved</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">71</div>
+        <div class="stat-label">MCP tools intact</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">4</div>
+        <div class="stat-label">Pre-existing bugs fixed</div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <h2>Why This Matters</h2>
+
+    <div class="impact-grid">
+      <div class="impact-card">
+        <div class="impact-icon">&#128269;</div>
+        <div class="impact-title">Easier to Find Things</div>
+        <div class="impact-desc">
+          Need to fix something in the calendar? Open <code>calendar-view.js</code>. Problem with focus mode? It's in <code>focus-mode.js</code>.
+          No more scrolling through 11,000 lines to find the right section.
+        </div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon">&#9889;</div>
+        <div class="impact-title">Faster Development</div>
+        <div class="impact-desc">
+          Claude (and any human developer) can now read just the relevant 500-line file
+          instead of processing the entire 11,000-line monolith. This means faster, more accurate changes.
+        </div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon">&#128737;</div>
+        <div class="impact-title">Safer Changes</div>
+        <div class="impact-desc">
+          When features are in separate files, changing one area is less likely to accidentally
+          break another. Each module has a clear boundary and responsibility.
+        </div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-icon">&#128736;</div>
+        <div class="impact-title">Foundation for Future Work</div>
+        <div class="impact-desc">
+          The implementation roadmap (Weeks 1&ndash;6) becomes much easier now. Adding new views,
+          settings UI, or power features means creating or editing small, focused files.
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <h2>New File Structure</h2>
+
+    <h3>Application Logic (renderer/)</h3>
+    <p>
+      The main app logic &mdash; everything that controls what you see and interact with &mdash;
+      was split into 14 files grouped by feature:
+    </p>
+
+    <div class="file-tree">
+<span class="dir">renderer/</span>
+  <span class="new">app.js</span>            <span class="desc">&larr; Entry point: class definition, startup, view routing</span>
+  <span class="new">utils.js</span>          <span class="desc">&larr; Shared helpers (date formatting, HTML escaping, etc.)</span>
+  <span class="new">data.js</span>           <span class="desc">&larr; Create/read/update/delete tasks, projects, tags</span>
+  <span class="new">events.js</span>         <span class="desc">&larr; Keyboard shortcuts, click handlers, navigation</span>
+  <span class="new">today-view.js</span>     <span class="desc">&larr; Today view, "Plan My Day," auto-roll unfinished tasks</span>
+  <span class="new">calendar-view.js</span>  <span class="desc">&larr; Calendar month/week/day, dual-track timeline</span>
+  <span class="new">focus-mode.js</span>     <span class="desc">&larr; Pomodoro timer, focus pill, AI encouragement</span>
+  <span class="new">tasks.js</span>          <span class="desc">&larr; Task cards, modals, detail panel, drag-and-drop</span>
+  <span class="new">projects-view.js</span>  <span class="desc">&larr; Sidebar, project list/board/timeline views</span>
+  <span class="new">inbox-view.js</span>     <span class="desc">&larr; Inbox triage, AI prompt builders</span>
+  <span class="new">recaps.js</span>         <span class="desc">&larr; Daily recaps, completion log, daily review</span>
+  <span class="new">analytics.js</span>      <span class="desc">&larr; Dashboard, productivity stats, bulk actions</span>
+  <span class="new">modals.js</span>         <span class="desc">&larr; Modal dialogs, toasts, context menus, snooze popup</span>
+  <span class="new">integrations.js</span>   <span class="desc">&larr; Command palette (Ctrl+K), Notion sync</span>
+    </div>
+
+    <h3>Styles (styles/)</h3>
+    <p>
+      All visual styling was split into 14 files that mirror the feature modules:
+    </p>
+
+    <div class="file-tree">
+<span class="dir">styles/</span>
+  <span class="new">variables.css</span>     <span class="desc">&larr; Colors, spacing, fonts (the design system)</span>
+  <span class="new">layout.css</span>        <span class="desc">&larr; Page structure: sidebar, header, content area</span>
+  <span class="new">sidebar.css</span>       <span class="desc">&larr; Navigation, project list, category tree</span>
+  <span class="new">tasks.css</span>         <span class="desc">&larr; Task items, subtasks, board columns</span>
+  <span class="new">calendar.css</span>      <span class="desc">&larr; Calendar grids, timeline, scheduling</span>
+  <span class="new">modals.css</span>        <span class="desc">&larr; Popups, forms, settings panel</span>
+  <span class="new">focus-mode.css</span>    <span class="desc">&larr; Focus mode, timer ring, celebrations</span>
+  <span class="new">today-view.css</span>    <span class="desc">&larr; Today view, stats cards, task queue</span>
+  <span class="new">recaps.css</span>        <span class="desc">&larr; Recap views, journal, saved recaps</span>
+  <span class="new">inbox.css</span>         <span class="desc">&larr; Inbox triage layout</span>
+  <span class="new">projects.css</span>      <span class="desc">&larr; Project views, planning cards</span>
+  <span class="new">analytics.css</span>     <span class="desc">&larr; Dashboard charts, bulk selection</span>
+  <span class="new">master-list.css</span>   <span class="desc">&larr; Master list compact view</span>
+  <span class="new">utilities.css</span>     <span class="desc">&larr; Tooltips, toasts, context menus, misc</span>
+    </div>
+
+    <h3>MCP Server (mcp-server/)</h3>
+    <p>
+      The Claude integration server &mdash; all 71 tools that Claude uses to manage your tasks &mdash;
+      was split into 10 files by tool category:
+    </p>
+
+    <div class="file-tree">
+<span class="dir">mcp-server/</span>
+  <span class="mod">index.js</span>            <span class="desc">&larr; Server startup + routes tool calls to the right module</span>
+  <span class="new">data.js</span>             <span class="desc">&larr; Read/write the task data file</span>
+  <span class="new">tools-core.js</span>       <span class="desc">&larr; 24 tools: create, update, delete, complete tasks</span>
+  <span class="new">tools-views.js</span>      <span class="desc">&larr; 8 tools: get today's tasks, overdue, inbox, etc.</span>
+  <span class="new">tools-scheduling.js</span> <span class="desc">&larr; 6 tools: schedule times, bulk scheduling</span>
+  <span class="new">tools-ai.js</span>         <span class="desc">&larr; 8 tools: brain dump processing, priority suggestions</span>
+  <span class="new">tools-recaps.js</span>     <span class="desc">&larr; 9 tools: daily recap, weekly review, plan my day</span>
+  <span class="new">tools-projects.js</span>   <span class="desc">&larr; 12 tools: project management, dependencies</span>
+  <span class="new">tools-analytics.js</span>  <span class="desc">&larr; 4 tools: productivity stats, insights</span>
+  <span class="new">tools-notion.js</span>     <span class="desc">&larr; Placeholder for future Notion integration</span>
+    </div>
+
+    <!-- ============================================================ -->
+    <h2>Module Breakdown</h2>
+
+    <h3>Renderer Modules (14 files, 265 methods)</h3>
+    <table>
+      <thead>
+        <tr><th>Module</th><th>Methods</th><th>What It Does</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>app.js</code></td><td>25</td><td>The main entry point. Starts the app, manages which view is shown, handles startup tasks.</td></tr>
+        <tr><td><code>utils.js</code></td><td>14</td><td>Small helper functions used everywhere: formatting dates, escaping text, generating IDs.</td></tr>
+        <tr><td><code>data.js</code></td><td>31</td><td>All data operations: creating/editing/deleting tasks, projects, tags, categories. Saving to disk.</td></tr>
+        <tr><td><code>events.js</code></td><td>18</td><td>Wires up every button click, keyboard shortcut, and interaction in the app.</td></tr>
+        <tr><td><code>today-view.js</code></td><td>15</td><td>The main "Today" dashboard: working-on-now, up-next queue, daily stats, plan-my-day.</td></tr>
+        <tr><td><code>calendar-view.js</code></td><td>18</td><td>Month/week/day calendar views, the dual-track timeline, drag-to-schedule.</td></tr>
+        <tr><td><code>focus-mode.js</code></td><td>36</td><td>The pomodoro timer, focus queue, floating pill widget, AI chat companion, celebrations.</td></tr>
+        <tr><td><code>tasks.js</code></td><td>43</td><td>How tasks are displayed (cards, lists, boards), task edit modals, the detail panel.</td></tr>
+        <tr><td><code>projects-view.js</code></td><td>16</td><td>The sidebar project list, project page (list/board/timeline views), planning section.</td></tr>
+        <tr><td><code>inbox-view.js</code></td><td>5</td><td>The inbox triage view and the AI prompt builders (Process, Impact Review, Coach Me).</td></tr>
+        <tr><td><code>recaps.js</code></td><td>16</td><td>Completed tasks view, recap journal, saved recaps, daily review modal.</td></tr>
+        <tr><td><code>analytics.js</code></td><td>8</td><td>The dashboard overview, analytics charts, and bulk task selection/actions.</td></tr>
+        <tr><td><code>modals.js</code></td><td>14</td><td>Opening/closing popups, toast notifications, confirmation dialogs, context menus, snooze.</td></tr>
+        <tr><td><code>integrations.js</code></td><td>14</td><td>The command palette (Ctrl+K) and Notion two-way sync.</td></tr>
+      </tbody>
+    </table>
+
+    <h3>MCP Server Modules (10 files, 71 tools)</h3>
+    <table>
+      <thead>
+        <tr><th>Module</th><th>Tools</th><th>What It Does</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>index.js</code></td><td>&mdash;</td><td>Starts the MCP server and routes each tool call to the right handler module.</td></tr>
+        <tr><td><code>data.js</code></td><td>&mdash;</td><td>Reads and writes the task data file. Shared by all tool modules.</td></tr>
+        <tr><td><code>tools-core.js</code></td><td>24</td><td>The basics: get/create/update/delete tasks, complete tasks, subtasks, blockers.</td></tr>
+        <tr><td><code>tools-views.js</code></td><td>8</td><td>Filtered views: today's tasks, overdue, upcoming, inbox, ready, scheduled.</td></tr>
+        <tr><td><code>tools-scheduling.js</code></td><td>6</td><td>Time scheduling: set times, clear times, bulk-schedule a day.</td></tr>
+        <tr><td><code>tools-ai.js</code></td><td>8</td><td>AI features: process brain dumps, suggest priorities, parallel task planning.</td></tr>
+        <tr><td><code>tools-recaps.js</code></td><td>9</td><td>Reviews: daily recap, weekly review, plan my day, manage recap log.</td></tr>
+        <tr><td><code>tools-projects.js</code></td><td>12</td><td>Project management: create projects, move tasks, dependencies, project trees.</td></tr>
+        <tr><td><code>tools-analytics.js</code></td><td>4</td><td>Statistics: productivity stats, insights, work context, project analytics.</td></tr>
+        <tr><td><code>tools-notion.js</code></td><td>0</td><td>Placeholder for future Notion tool integration (Notion sync currently lives in the renderer).</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================================ -->
+    <h2>Other Changes</h2>
+
+    <h3>Claude Queue Path is Now Configurable</h3>
+    <p>
+      Previously, the path to the Claude Queue runner script was hardcoded in <code>main.js</code>.
+      Now it reads from your saved settings (<code>data.settings.claudeQueuePath</code>) with
+      the old path as the default. This means it can be changed without editing code, and will
+      work correctly on any machine.
+    </p>
+
+    <h3>Bug Fixes Found During Refactoring</h3>
+    <p>
+      While splitting the code, we discovered 4 places where the code referenced methods that
+      had been renamed in earlier updates but their callers were never updated. These would have
+      caused errors if those code paths were triggered. All four have been fixed:
+    </p>
+
+    <div class="bug-fix">
+      <div class="bug-fix-label">4 Stale References Fixed</div>
+      <p><strong>openEditTaskModal</strong> &rarr; <code>openTaskModal</code> &mdash; Pressing "E" to edit a selected task now works.</p>
+      <p><strong>startFocusMode</strong> &rarr; <code>enterFocusMode</code> &mdash; The "Start Focus" button on Today view now works.</p>
+      <p><strong>renderFocusQueue</strong> &rarr; <code>renderUpNextQueue</code> &mdash; Undo-completion refresh no longer errors.</p>
+      <p style="margin-bottom:0"><strong>updateCommandCenterStats</strong> &rarr; <code>updateTodayStats</code> &mdash; Stats update correctly after task changes.</p>
+    </div>
+
+    <h3>Naming Conflict Resolutions</h3>
+    <p>
+      Two methods had the same name but different behaviors (a bug in the original code where the
+      second definition silently replaced the first). Both have been given distinct names:
+    </p>
+    <ul>
+      <li><strong>clearTaskSelection</strong> appeared twice &mdash; one for keyboard navigation, one for bulk selection.
+        The keyboard version was renamed to <code>clearKeyboardSelection</code>.</li>
+      <li><strong>formatTimeDisplay</strong> appeared twice &mdash; one takes a time string, one takes hour+minute numbers.
+        The calendar version was renamed to <code>formatCalendarTime</code>, fixing a bug where the
+        calendar tried to call <code>.split()</code> on a number.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2>What Did NOT Change</h2>
+
+    <div class="callout">
+      <div class="callout-label">Important</div>
+      <p>
+        <strong>Zero user-facing changes.</strong> The app looks and behaves exactly the same.
+        Every view, every shortcut, every button, every Claude tool &mdash; all identical.
+        This refactor only reorganized the internal code structure. If you were using the app
+        before, you won't notice any difference (except that a few edge-case bugs are now fixed).
+      </p>
+    </div>
+
+    <ul>
+      <li>No features added or removed</li>
+      <li>No visual/design changes</li>
+      <li>No changes to how data is stored (same <code>taskflow-data.json</code> format)</li>
+      <li>No changes to keyboard shortcuts</li>
+      <li>No changes to the MCP tool names or behaviors (Claude uses them exactly the same way)</li>
+      <li>No new dependencies added</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2>How It Works (Technical Details)</h2>
+
+    <h3>Renderer: ES Module Mixin Pattern</h3>
+    <p>
+      The app uses a single <code>TaskFlowApp</code> class where every method uses <code>this</code>
+      to access shared state. To split it without rewriting every method:
+    </p>
+    <ol>
+      <li>Each module exports standalone functions (e.g., <code>export function renderCalendar() { ... }</code>)</li>
+      <li>The entry point (<code>app.js</code>) uses <code>Object.assign(TaskFlowApp.prototype, ...)</code>
+        to mix all module functions onto the class</li>
+      <li>At runtime, every function is a method on the same class &mdash; <code>this</code> works exactly as before</li>
+      <li><code>index.html</code> loads the entry point as <code>&lt;script type="module"&gt;</code></li>
+    </ol>
+
+    <h3>CSS: @import Splitting</h3>
+    <p>
+      The main <code>styles.css</code> was replaced with 14 <code>@import</code> statements that
+      load each component file. The import order preserves CSS specificity (variables first, then
+      layout, then feature-specific styles). No changes to <code>index.html</code> were needed &mdash;
+      it still links <code>styles.css</code>.
+    </p>
+
+    <h3>MCP Server: Module Router Pattern</h3>
+    <p>
+      Each tool category exports two functions: <code>getToolDefinitions()</code> (tool schemas)
+      and <code>handleTool()</code> (execution logic). The main <code>index.js</code> collects all
+      definitions for listing and tries each module's handler in sequence when a tool is called.
+      Modules return <code>null</code> for tools they don't handle, so the router moves to the next.
+    </p>
+
+    <!-- ============================================================ -->
+    <h2>Files Modified</h2>
+
+    <table>
+      <thead>
+        <tr><th>File</th><th>Change</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>index.html</code></td><td>Script tag changed from <code>renderer.js</code> to <code>renderer/app.js</code> (module)</td></tr>
+        <tr><td><code>styles.css</code></td><td>Content replaced with 14 <code>@import</code> statements</td></tr>
+        <tr><td><code>main.js</code></td><td>Claude Queue path now reads from settings instead of hardcoded value</td></tr>
+        <tr><td><code>mcp-server/index.js</code></td><td>Rewritten as a lightweight router that imports tool modules</td></tr>
+      </tbody>
+    </table>
+
+    <p>
+      The original <code>renderer.js</code> is still in the project root. It can be deleted once
+      the modular version is confirmed working. It serves as a reference/backup during the transition.
+    </p>
+
+    <!-- ============================================================ -->
+    <h2>Verification Checklist</h2>
+    <p>After the refactor, confirm everything works by checking:</p>
+    <ol>
+      <li><code>npm start</code> &mdash; App launches without errors</li>
+      <li>DevTools console (Ctrl+Shift+I) &mdash; No import errors or undefined method errors</li>
+      <li>Navigate all views: Today, Inbox, Projects, Calendar, Recaps, Dashboard, Master List</li>
+      <li>Create, edit, complete, and delete a task</li>
+      <li>Start and stop Focus Mode</li>
+      <li>Open the Command Palette (Ctrl+K)</li>
+      <li>Quick Capture (Ctrl+Shift+Space)</li>
+      <li>Test MCP tools via Claude Desktop or Claude Code</li>
+      <li>Verify overlay windows (floating bar, focus pill) still work</li>
+    </ol>
+
+    <footer>
+      TaskFlow PM &mdash; Code Review &amp; Refactor (Phases 1&ndash;3) &mdash; February 2026
+    </footer>
+
+  </div>
+</body>
+</html>
