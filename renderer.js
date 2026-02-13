@@ -1070,14 +1070,14 @@ class TaskFlowApp {
     const openQueueBtn = document.getElementById('sidebar-open-queue');
     if (openQueueBtn) {
       openQueueBtn.addEventListener('click', () => {
-        this.openFilePath('C:\\Users\\vince\\OneDrive\\Vincenzo\\Claude\\Claude Queue\\claude_queue.md');
+        this.openFilePath('C:\\Projects\\Claude\\claude_queue.md');
       });
     }
 
     const runQueueBtn = document.getElementById('sidebar-run-queue');
     if (runQueueBtn) {
       runQueueBtn.addEventListener('click', () => {
-        this.openFilePath('C:\\Users\\vince\\OneDrive\\Vincenzo\\Claude\\Claude Queue\\run_queue.bat');
+        this.openFilePath('C:\\Projects\\Claude\\run_queue.bat');
       });
     }
 
@@ -3419,7 +3419,7 @@ class TaskFlowApp {
     if (task.assignedTo === 'claude') {
       assignedBadge = '<span class="assigned-badge claude-badge" title="Assigned to Claude">&#129302;</span>';
     } else if (task.assignedTo === 'vin') {
-      assignedBadge = '<span class="assigned-badge vin-badge" title="Assigned to Vin">V</span>';
+      assignedBadge = '<span class="assigned-badge vin-badge" title="Assigned to Tom">T</span>';
     }
 
     el.innerHTML = `
@@ -3534,7 +3534,7 @@ class TaskFlowApp {
     if (subtask.assignedTo === 'claude') {
       assignedBadge = '<span class="assigned-badge claude-badge" title="Assigned to Claude">&#129302;</span>';
     } else if (subtask.assignedTo === 'vin') {
-      assignedBadge = '<span class="assigned-badge vin-badge" title="Assigned to Vin">V</span>';
+      assignedBadge = '<span class="assigned-badge vin-badge" title="Assigned to Tom">T</span>';
     }
     el.innerHTML = `
       <button type="button" class="subtask-checkbox ${subtask.status === 'done' ? 'checked' : ''}">${subtask.status === 'done' ? '&#10003;' : ''}</button>
@@ -4279,7 +4279,7 @@ class TaskFlowApp {
           <span class="subtask-name">${this.escapeHtml(st.name)}</span>
           <select class="subtask-assigned-to" data-subtask-id="${st.id}">
             <option value="" ${!st.assignedTo ? 'selected' : ''}>-</option>
-            <option value="vin" ${st.assignedTo === 'vin' ? 'selected' : ''}>Vin</option>
+            <option value="vin" ${st.assignedTo === 'vin' ? 'selected' : ''}>Tom</option>
             <option value="claude" ${st.assignedTo === 'claude' ? 'selected' : ''}>Claude</option>
           </select>
           <button class="task-action-btn delete-subtask" title="Delete">&#10005;</button>
@@ -4339,7 +4339,7 @@ class TaskFlowApp {
           <span class="detail-field-label">Assigned To</span>
           <select class="detail-field-value" id="detail-assigned-to">
             <option value="" ${!task.assignedTo ? 'selected' : ''}>Unassigned</option>
-            <option value="vin" ${task.assignedTo === 'vin' ? 'selected' : ''}>Vin</option>
+            <option value="vin" ${task.assignedTo === 'vin' ? 'selected' : ''}>Tom</option>
             <option value="claude" ${task.assignedTo === 'claude' ? 'selected' : ''}>Claude</option>
           </select>
         </div>
@@ -5738,7 +5738,7 @@ class TaskFlowApp {
     prompt += `After I respond, create a targeted day plan:\n\n`;
 
     prompt += `**Divide and Conquer** — Split everything into two tracks:\n`;
-    prompt += `- **What I (Vin) should focus on**: The high-leverage tasks only I can do — decisions, calls, creative work, reviews, anything requiring human judgment. Sequence them smartly (hardest when energy is high, admin when it dips).\n`;
+    prompt += `- **What I (Tom) should focus on**: The high-leverage tasks only I can do — decisions, calls, creative work, reviews, anything requiring human judgment. Sequence them smartly (hardest when energy is high, admin when it dips).\n`;
     prompt += `- **What you (Claude) will handle**: Everything you can run with autonomously — research, drafting, analysis, code generation, summarizing, organizing. Be aggressive here — take as much off my plate as possible.\n`;
     prompt += `- **Collaborative**: Tasks we should do together in real-time.\n\n`;
 

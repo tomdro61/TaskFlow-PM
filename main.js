@@ -352,7 +352,7 @@ ipcMain.on('pill-action', (event, action) => {
 // Run Claude Queue
 ipcMain.handle('run-claude-queue', async () => {
   const { exec } = require('child_process');
-  const queuePath = 'C:\\Users\\vince\\OneDrive\\Vincenzo\\Claude\\Claude Queue\\run_queue.bat';
+  const queuePath = 'C:\\Projects\\Claude\\run_queue.bat';
 
   return new Promise((resolve) => {
     exec(`start cmd /c "${queuePath}"`, { cwd: path.dirname(queuePath) }, (error) => {

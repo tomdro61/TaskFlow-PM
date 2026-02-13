@@ -5409,10 +5409,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
       let queueContent = `# CLAUDE QUEUE — ${dateStr}
 
-**Owner:** Vin DeGregorio
+**Owner:** Tom
 **Prepared by:** TaskFlow PM (Auto-synced)
 **Run Order:** Tasks 1 → ${claudeTasks.length}
-**Output Location:** \`C:\\Users\\vince\\OneDrive\\Vincenzo\\Claude\\outputs\\\`
+**Output Location:** \`C:\\Projects\\Claude\\outputs\\\`
 
 ---
 
@@ -5489,7 +5489,7 @@ ${pt.context}
 `;
 
       // Write to file
-      const queuePath = "C:\\Users\\vince\\OneDrive\\Vincenzo\\Claude\\Claude Queue\\claude_queue.md";
+      const queuePath = "C:\\Projects\\Claude\\claude_queue.md";
       try {
         fs.writeFileSync(queuePath, queueContent, "utf-8");
         return {

@@ -113,7 +113,7 @@ class NotionSync {
           select: {
             options: [
               { name: 'Claude', color: 'purple' },
-              { name: 'Vin', color: 'green' },
+              { name: 'Tom', color: 'green' },
             ]
           }
         },
@@ -181,12 +181,12 @@ class NotionSync {
 
   static ASSIGNED_TO_NOTION = {
     'claude': 'Claude',
-    'vin': 'Vin',
+    'vin': 'Tom',
   };
 
   static ASSIGNED_FROM_NOTION = {
     'Claude': 'claude',
-    'Vin': 'vin',
+    'Tom': 'vin',
   };
 
   _richText(str) {
