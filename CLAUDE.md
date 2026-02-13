@@ -16,45 +16,81 @@ TaskFlow PM is an **AI-powered task management desktop app** built with Electron
 ## Project Structure
 
 ```
-To Do Software/
-├── main.js              # Electron main process
-├── preload.js           # Preload script for main window
-├── preload-capture.js   # Preload for quick capture window
-├── preload-pill.js      # Preload for focus pill widget
-├── renderer.js          # Main UI logic (TaskFlowApp class)
-├── index.html           # Main window HTML
-├── styles.css           # All CSS styles
-├── quick-capture.html   # Global quick capture overlay
-├── focus-pill.html      # Floating focus mode widget
-├── mcp-server/
-│   └── index.js         # MCP server with 35+ tools for Claude
+TaskFlow-PM/
+├── main.js                  # Electron main process
+├── preload.js               # Preload script for main window
+├── preload-capture.js       # Preload for quick capture window
+├── preload-pill.js          # Preload for focus pill widget
+├── preload-floating-bar.js  # Preload for floating bar widget
+├── index.html               # Main window HTML
+├── styles.css               # CSS entry point (@imports styles/ files)
+├── quick-capture.html       # Global quick capture overlay
+├── floating-bar.html        # Floating task bar overlay
+├── focus-pill.html          # Floating focus mode widget
+├── renderer.js              # Legacy monolith (backup, not loaded)
+├── renderer/                # Modular app logic (14 ES modules)
+│   ├── app.js               #   Entry point, class shell, startup
+│   ├── utils.js             #   Date formatting, escapeHtml, helpers
+│   ├── data.js              #   Task/project/tag CRUD, save/load
+│   ├── events.js            #   Click handlers, keyboard shortcuts
+│   ├── today-view.js        #   Today dashboard, plan-my-day
+│   ├── calendar-view.js     #   Calendar month/week/day, timeline
+│   ├── focus-mode.js        #   Pomodoro timer, focus pill, AI chat
+│   ├── tasks.js             #   Task elements, modals, detail panel
+│   ├── projects-view.js     #   Sidebar, project views
+│   ├── inbox-view.js        #   Inbox triage, AI prompts
+│   ├── recaps.js            #   Recap journal, daily review
+│   ├── analytics.js         #   Dashboard, bulk actions
+│   ├── modals.js            #   Modal/toast/context menu helpers
+│   └── integrations.js      #   Command palette, Notion sync
+├── styles/                  # Modular CSS (14 component files)
+│   ├── variables.css        #   Design tokens, custom properties
+│   ├── layout.css           #   Page structure
+│   ├── sidebar.css          #   Navigation, project list
+│   ├── tasks.css            #   Task items, board columns
+│   ├── calendar.css         #   Calendar grids, timeline
+│   ├── modals.css           #   Popups, forms
+│   ├── focus-mode.css       #   Focus mode, timer
+│   ├── today-view.css       #   Today view, stats
+│   ├── recaps.css           #   Recap views
+│   ├── inbox.css            #   Inbox layout
+│   ├── projects.css         #   Project views
+│   ├── analytics.css        #   Dashboard charts
+│   ├── master-list.css      #   Master list view
+│   └── utilities.css        #   Toasts, tooltips, misc
+├── mcp-server/              # Claude MCP integration (10 files)
+│   ├── index.js             #   Server setup, tool router
+│   ├── data.js              #   Data file I/O, async mutex
+│   ├── tools-core.js        #   24 tools: CRUD, subtasks, blockers
+│   ├── tools-views.js       #   8 tools: filtered task views
+│   ├── tools-scheduling.js  #   6 tools: time scheduling
+│   ├── tools-ai.js          #   8 tools: brain dump, suggestions
+│   ├── tools-recaps.js      #   9 tools: recaps, reviews
+│   ├── tools-projects.js    #   12 tools: projects, dependencies
+│   ├── tools-analytics.js   #   4 tools: stats, insights
+│   └── tools-notion.js      #   Notion integration (placeholder)
 ├── package.json
-└── claude-desktop-config.json  # MCP server config for Claude Desktop
+└── claude-desktop-config.json
 ```
 
 ## Key Files
 
-### renderer.js (Main Application Logic)
-- `TaskFlowApp` class - core application
-- Views: Today, Inbox, Projects, Calendar, Command Center
-- Focus Mode with Pomodoro timer
-- Dual-track timeline (Claude vs Manual tasks)
-- Task CRUD, drag-and-drop scheduling
+### renderer/ (Main Application Logic — 14 ES Modules)
+- **app.js** — `TaskFlowApp` class shell, constructor, init, view routing. Imports all other modules and mixes them onto the prototype via `Object.assign`.
+- **Feature modules** — Each file owns one feature area (today-view.js, calendar-view.js, focus-mode.js, etc.). Methods export as standalone functions and work via `this` through prototype binding.
+- **data.js** — All CRUD operations for tasks, projects, tags, categories. `saveData()` persists to disk.
+- **events.js** — All event binding: click handlers, keyboard shortcuts, navigation.
+- **utils.js** — Shared helpers: `escapeHtml()`, date formatting, ID generation.
 
-### mcp-server/index.js (Claude Integration)
-40+ MCP tools organized by category:
-- **Core CRUD:** get_all_tasks, create_task, update_task, delete_task, complete_task
-- **Views:** get_today_tasks, get_overdue_tasks, get_upcoming_tasks, get_inbox_tasks, get_ready_tasks
-- **Scheduling:** set_scheduled_time, clear_scheduled_time, bulk_schedule_today, get_scheduled_tasks
-- **AI Processing:** process_brain_dump, suggest_subtasks, suggest_priority, suggest_next_task
-- **Parallel Execution:** set_execution_type, suggest_parallel_tasks, get_parallel_schedule
-- **Reviews:** daily_recap, weekly_review, plan_my_day
-- **Recap Documentation:** add_recap_entry, get_recap_log, save_recap, get_saved_recaps, get_recap_by_id, delete_recap_entry
+### mcp-server/ (Claude Integration — 10 files, 71 tools)
+- **index.js** — Server startup and tool router. Imports tool modules and delegates `callTool` to the matching handler.
+- **data.js** — Shared data I/O with async mutex (`withLock`) for safe parallel tool calls.
+- **tools-*.js** — Tool handlers grouped by category (core, views, scheduling, ai, recaps, projects, analytics, notion).
 
-### styles.css
-- CSS custom properties for theming
-- Component styles organized by section
-- Dual-track timeline styles (indigo for AI, emerald for manual)
+### styles/ (CSS — 14 component files)
+- **styles.css** (root) — Entry point with `@import` statements loading all component files.
+- **variables.css** — Design tokens (colors, spacing, fonts) as CSS custom properties.
+- **Component files** — Each mirrors a renderer module (tasks.css, calendar.css, focus-mode.css, etc.).
 
 ## Data Model
 
@@ -172,11 +208,12 @@ node mcp-server/index.js
 ## Code Conventions
 
 - **No TypeScript** - Pure JavaScript
-- **Class-based** - TaskFlowApp is the main class
-- **Event binding** - Done in `bindEvents()` method
+- **ES Module Mixin Pattern** - `TaskFlowApp` is the main class. Feature modules export standalone functions that are mixed onto the prototype via `Object.assign(TaskFlowApp.prototype, ...)`. All methods use `this` normally.
+- **Event binding** - Done in `bindEvents()` (renderer/events.js) using event delegation on parent containers
 - **Rendering** - Methods prefixed with `render` (e.g., `renderCommandCenter()`)
 - **Data persistence** - `saveData()` called after mutations
 - **Escaping** - Always use `escapeHtml()` for user content
+- **Task lookups** - Use `this.findTask(id)` which uses an O(1) index (`this._taskIndex`)
 
 ## CSS Conventions
 
@@ -202,21 +239,30 @@ To use with Claude Desktop, add to `claude_desktop_config.json`:
 ## Important Patterns
 
 ### Adding a New MCP Tool
-1. Add tool definition to `listTools()` in mcp-server/index.js
-2. Add handler in the switch statement in `callTool()`
-3. Follow existing patterns for input validation and response format
+1. Find the appropriate `mcp-server/tools-*.js` file by category (or create a new one)
+2. Add the tool schema to `getToolDefinitions()` in that file
+3. Add the handler case in `handleTool()` in the same file
+4. If creating a new tool module, import it in `mcp-server/index.js` and add to the `toolModules` array
+5. Follow existing patterns for input validation and response format
 
 ### Adding a New View
-1. Add view case in `render()` method
-2. Create `render<ViewName>()` method
-3. Add nav button in index.html if needed
-4. Add styles in styles.css
+1. Create a new module file in `renderer/` (e.g., `renderer/my-view.js`)
+2. Export a `renderMyView()` function (and any supporting functions)
+3. Import the module in `renderer/app.js` and add it to the `Object.assign()` call
+4. Add the view case in `render()` method in `renderer/app.js`
+5. Add nav button in index.html if needed
+6. Create a corresponding `styles/my-view.css` and add its `@import` to `styles.css`
+
+### Adding Methods to an Existing Module
+1. Export the function from the appropriate `renderer/*.js` file
+2. It automatically becomes a method on `TaskFlowApp` via the mixin pattern — no other changes needed
+3. Use `this` normally to access app state and call other methods
 
 ### Modifying the Timeline
-- Timeline rows rendered in `renderDualTrackTimeline()`
-- Task blocks rendered in `renderTimelineTasks()`
-- Drop zones bound in `bindTimelineDropZones()`
-- Task picker modal in `openTaskPicker()`
+- Timeline rows rendered in `renderDualTrackTimeline()` (renderer/calendar-view.js)
+- Task blocks rendered in `renderTimelineTasks()` (renderer/calendar-view.js)
+- Drop zones bound in `bindTimelineDropZones()` (renderer/calendar-view.js)
+- Task picker modal in `openTaskPicker()` (renderer/calendar-view.js)
 
 ---
 
@@ -283,16 +329,17 @@ To use with Claude Desktop, add to `claude_desktop_config.json`:
 - [ ] "Plan My Day" button (prepares data for Claude, no auto API calls)
 - [ ] Overnight Queue UI section (visual organizer for tasks tagged for Claude)
 - [ ] Overnight Results display (read local Claude Queue sync file on startup)
-- [ ] Remove hardcoded Claude Queue paths — make configurable
+- [x] Remove hardcoded Claude Queue paths — make configurable
 
 ### Week 3: Visual Polish
 - [ ] Execution type color coding (indigo=AI, emerald=manual, blend=hybrid)
 - [ ] Persistent status bar (current task, next scheduled, queue count, shortcut hints)
 
-### Week 4: Architecture
-- [ ] Split renderer.js (8,378 lines) into ~12 focused module files
-- [ ] Split styles.css (10,636 lines) into component-scoped files
-- [ ] Add error handling (try-catch wrappers, user-facing error toasts)
+### Week 4: Architecture (DONE)
+- [x] Split renderer.js (11,397 lines) into 14 focused ES module files
+- [x] Split styles.css (12,824 lines) into 14 component-scoped files
+- [x] Split mcp-server/index.js (5,529 lines) into 10 tool modules
+- [x] Add error handling (try-catch wrappers, user-facing error toasts)
 
 ### Week 5: UX Refinement
 - [ ] Settings/Preferences UI (queue path, default view, timeline hours, pomodoro, theme)
@@ -324,7 +371,7 @@ To use with Claude Desktop, add to `claude_desktop_config.json`:
 ### 1.1 Rebuild Today View as Focused Task Queue
 
 **Problem:** Today view renders a cluttered "Command Center" with priority-grouped sections. Should be a clean, focused queue.
-**Files:** `renderer.js`, `styles.css`, `index.html`
+**Files:** `renderer/today-view.js`, `styles/today-view.css`, `index.html`
 
 **New layout:** Two-column — Task Queue (left) + Brain Dumps & Stats (right)
 - **Working On Now** — single highlighted task at the top (the current focus)
@@ -362,7 +409,7 @@ To use with Claude Desktop, add to `claude_desktop_config.json`:
 
 **Current:** Expandable "Completed Today" section stays visible
 **New:** Tasks vanish from all active views on completion. Show brief toast: "Task X completed"
-**File:** `renderer.js` — filter `.status !== 'done'` in all view renders, add toast component
+**File:** `renderer/today-view.js` — filter `.status !== 'done'` in all view renders. Toast via `renderer/modals.js`.
 
 ### 1.3 Auto-Roll Unfinished Tasks to Tomorrow
 
@@ -371,4 +418,4 @@ To use with Claude Desktop, add to `claude_desktop_config.json`:
 1. Find tasks with `scheduledDate` before today and `status !== 'done'`
 2. Move `scheduledDate` to today, clear `scheduledTime`
 3. Show startup banner: "X tasks rolled forward from yesterday"
-**Files:** `renderer.js` (startup logic), `main.js` (optional midnight timer)
+**Files:** `renderer/app.js` (startup logic), `renderer/today-view.js` (autoRollTasks), `main.js` (optional midnight timer)
